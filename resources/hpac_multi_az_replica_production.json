@@ -116,9 +116,9 @@
       "Default": "3",
       "Description" : "The initial number of WebServer instances",
       "Type": "Number",
-      "MinValue": "2",
-      "MaxValue": "5",
-      "ConstraintDescription" : "must be between 1 and 5 EC2 instances."
+      "MinValue": "3",
+      "MaxValue": "10",
+      "ConstraintDescription" : "must be between 1 and 10 EC2 instances."
     },
 
      "WebServerCapacitySingle": {
@@ -251,11 +251,14 @@
       "Properties" : {
         "AvailabilityZones" : [ "us-east-1a","us-east-1d" ],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig1" },
-        "MinSize" : "1",
-        "MaxSize" : "5",
+        "MinSize" : "3",
+        "MaxSize" : "10",
         "DesiredCapacity" : { "Ref" : "WebServerCapacity" },
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
-        "Tags" : [{ "Key"  : "Name", "Value" : "HPAC Instance", "PropagateAtLaunch" : "true" }]
+        "Tags" : [{ "Key"  : "Environment", "Value" : "HPAC Production Instance", "PropagateAtLaunch" : "true" },
+                  { "Key"  : "Name", "Value" : "HPAC Drupal Instance WebServerGroup1", "PropagateAtLaunch" : "true" },
+                  { "Key"  : "Owner", "Value" : "Harvard Public Affairs & Communications", "PropagateAtLaunch" : "true" }
+                 ]
       }
     },
 
@@ -413,15 +416,18 @@
       }
     },
 
-  "WebServerGroup2" : {
+  "AdminServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "AvailabilityZones" : [ "us-east-1a" ],
+        "AvailabilityZones" : [ "us-east-1a","us-east-1d" ],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig2" },
         "MinSize" : "1",
         "MaxSize" : "1",
         "DesiredCapacity" : { "Ref" : "WebServerCapacitySingle" },
-        "Tags" : [{ "Key"  : "Name", "Value" : "HPAC Instance", "PropagateAtLaunch" : "true" }]
+        "Tags" : [{ "Key"  : "Environment", "Value" : "HPAC Production Instance", "PropagateAtLaunch" : "true" },
+                  { "Key"  : "Name", "Value" : "HPAC Drupal Instance Admin Server", "PropagateAtLaunch" : "true" },
+                  { "Key"  : "Owner", "Value" : "Harvard Public Affairs & Communications", "PropagateAtLaunch" : "true" }
+                 ]
       }
     },
 
