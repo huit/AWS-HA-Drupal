@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+#
+# This pretty-print fsome JSON
+#
+import json
+import os
+import argparse
+
+# Parse script agruments
+parser = argparse.ArgumentParser()
+parser.add_argument("template", help="The Cloudformation Template")
+args = parser.parse_args()
+
+# Read template and user-data script
+template = json.load(open(args.template,'r'))
+print json.dumps(template, separators=(', ', ':'), indent=2)
