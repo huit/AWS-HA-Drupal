@@ -1,0 +1,83 @@
+#!/bin/bash -v
+
+#
+# Load params as an environment
+#
+[ -r /etc/cloud-env.sh ] && source /etc/cloud-env.sh
+
+
+RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
+RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
+RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap"
+
+yum -y install $RPMS
+
+yum update -y aws-cfn-bootstrap
+
+# Helper function
+function error_exit
+{
+ /opt/aws/bin/cfn-signal -e 1 -r "$1" ${CFN_WaitHandle}
+ exit 1
+}
+
+
+# Install Apache Web Server, MySQL and Drupal
+/opt/aws/bin/cfn-init -s ${CFN_StackId} \
+  -r LaunchConfig1 \
+  --region ${CFN_Region} || error_exit 'Failed to run cfn-init'
+
+# Install s3fs
+cd /home/ec2-user/s3fs/s3fs-1.61
+./configure --prefix=/usr
+make
+make install
+
+# Move the website files to the top level
+mv /var/www/html/drupal-7.8/* /var/www/html
+mv /var/www/html/drupal-7.8/.htaccess /var/www/html
+rm -Rf /var/www/html/drupal-7.8
+
+# Mount the S3 bucket
+mv /var/www/html/sites/default/files /var/www/html/sites/default/files_original
+mkdir -p /var/www/html/sites/default/files
+s3fs -o allow_other -o use_cache=/tmp ${CFN_S3Bucket} /var/www/html/sites/default/files || error_exit 'Failed to mount the S3 bucket'
+echo `hostname` >> /var/www/html/sites/default/files/hosts
+
+# Make changes to Apache Web Server configuration
+sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
+service httpd restart
+
+# Only execute the site install if we are the first host up - otherwise we'll end up losing all the data
+read first < /var/www/html/sites/default/files/hosts
+if [ `hostname` = $first ]
+then
+  # Create the site in Drupal
+  cd /var/www/html
+
+  DB_URL=mysql://${DB_Username}:${DB_Password}@${DB_Hostname}:${DB_Port}/${DB_Name}
+
+  ~ec2-user/drush/drush site-install standard 
+     --yes \
+     --site-name="${APP_SiteName}" \
+     --site-mail="${APP_EMail}" \
+     --account-name="${APP_SiteAdmin}" \
+     --account-pass="${APP_SitePassword}" \
+     --db-url=${DB_URL} \
+     --db-prefix=drupal_
+
+   # use the S3 bucket for shared file storage
+   cp -R sites/default/files_original/* sites/default/files
+   cp -R sites/default/files_original/.htaccess sites/default/files
+fi
+
+# Copy settings.php file since everything else is configured
+cp /home/ec2-user/settings.php /var/www/html/sites/default
+rm /home/ec2-user/settings.php
+
+# Start services
+chkconfig httpd on    && service httpd restart 
+chkconfig sendmail on && service sendmail restart 
+
+# All is well so signal success
+/opt/aws/bin/cfn-signal -e 0 -r "Drupal setup complete" ${CFN_WaitHandle}

@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+#
+# This loads a CloudFormation template, injects a "user-data" script or config into it, then
+#   write the result to stdout.
+#
+import json
+import os
+import argparse
+
+# Parse script agruments
+parser = argparse.ArgumentParser()
+parser.add_argument("template", help="The Cloudformation Template")
+parser.add_argument("userdata", help="The User-data script to inject")
+parser.add_argument("launch_config", help="Name of the launch configuration to inject into")
+
+args = parser.parse_args()
+
+# Read template and user-data script
+template = json.load(open(args.template,'r'))
+
+with open(args.userdata,'r') as f:
+  lines = f.readlines()
+
+template['Resources'][args.launch_config]['Properties']['UserData']['Fn::Base64']['Fn::Join'] = [ '', lines ]
+print json.dumps(template, separators=(',', ':'))

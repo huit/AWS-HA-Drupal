@@ -264,28 +264,6 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
-            "packages" : {
-              "yum" : {
-                "httpd" : [],
-                "php" : [],
-                "php-mysql" : [],
-                "php-gd" : [],
-                "php-xml" : [],
-                "php-mbstring" : [],
-                "mysql" : [],
-                "gcc" : [],
-                "make" : [],
-                "libstdc++-devel" : [],
-                "gcc-c++" : [],
-                "fuse" : [],
-                "fuse-devel" : [],
-                "libcurl-devel" : [],
-                "libxml2-devel" : [],
-                "openssl-devel" : [],
-                "mailcap" : []
-
-              }
-            },
 
             "sources" : {
               "/var/www/html" : "http://ftp.drupal.org/files/projects/drupal-7.8.tar.gz",
@@ -296,6 +274,27 @@
             "files" : {
               "/etc/passwd-s3fs" : {
                 "content" : { "Fn::Join" : ["", [ { "Ref" : "S3Keys" }, ":", {"Fn::GetAtt": ["S3Keys", "SecretAccessKey"]}, "\n" ]]},
+                "mode" : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+
+              "/etc/cloud-env.sh" : {
+                "content" : { "Fn::Join" : ["", [ 
+                    "export CFN_WaitHandle=", { "Ref" : "WaitHandle" },   "\n",
+                    "export CFN_StackId=",    { "Ref" : "AWS::StackId" }, "\n",
+                    "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
+                    "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
+                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteEmail=",  { "Ref" : "SiteEMail" }, "\n",
+                    "export APP_SitePassword=",  { "Ref" : "SitePassword" }, "\n",
+                    "export DB_Username=",    { "Ref" : "DBUsername" }, "\n",
+                    "export DB_Password=",    { "Ref" : "DBPassword" }, "\n",
+                    "export DB_Name=",        { "Ref" : "DBName" }, "\n",
+                    "export DB_Hostname=",    {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, "\n",
+                    "export DB_Port=",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "\n"
+                  ]]},
                 "mode" : "000400",
                 "owner" : "root",
                 "group" : "root"
@@ -334,86 +333,22 @@
                 "owner" : "root",
                 "group" : "root"
               }
-            },
-
-            "services" : {
-              "sysvinit" : {
-                "httpd" : { "enabled" : "true", "ensureRunning" : "true" },
-                "sendmail" : { "enabled" : "false", "ensureRunning" : "false" }
-              }
             }
           }
         }
       },
+
       "Properties": {
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -v\n",
-          "yum update -y aws-cfn-bootstrap\n",
-
-          "# Helper function\n",
-          "function error_exit\n",
-          "{\n",
-          " /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
-          " exit 1\n",
-          "}\n",
-
-          "# Install Apache Web Server, MySQL and Drupal\n",
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r LaunchConfig1 ",
-          " --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
-          "# Install s3fs\n",
-          "cd /home/ec2-user/s3fs/s3fs-1.61\n",
-          "./configure --prefix=/usr\n",
-          "make\n",
-          "make install\n",
-
-          "# Move the website files to the top level\n",
-          "mv /var/www/html/drupal-7.8/* /var/www/html\n",
-          "mv /var/www/html/drupal-7.8/.htaccess /var/www/html\n",
-          "rm -Rf /var/www/html/drupal-7.8\n",
-
-          "# Mount the S3 bucket\n",
-          "mv /var/www/html/sites/default/files /var/www/html/sites/default/files_original\n",
-          "mkdir -p /var/www/html/sites/default/files\n",
-          "s3fs -o allow_other -o use_cache=/tmp ", { "Ref" : "S3Bucket" } ," /var/www/html/sites/default/files || error_exit 'Failed to mount the S3 bucket'\n",
-          "echo `hostname` >> /var/www/html/sites/default/files/hosts\n",
-
-          "# Make changes to Apache Web Server configuration\n",
-          "sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf\n",
-          "service httpd restart\n",
-
-          "# Only execute the site install if we are the first host up - otherwise we'll end up losing all the data\n",
-          "read first < /var/www/html/sites/default/files/hosts\n",
-          "if [ `hostname` = $first ]\n",
-          "then\n",
-          " # Create the site in Drupal\n",
-          " cd /var/www/html\n",
-          " ~ec2-user/drush/drush site-install standard --yes",
-          " --site-name='", { "Ref" : "SiteName" }, "' --site-mail=", { "Ref" : "SiteEMail" },
-          " --account-name=", { "Ref" : "SiteAdmin" }, " --account-pass=", { "Ref" : "SitePassword" },
-          " --db-url=mysql://", { "Ref" : "DBUsername" }, ":", { "Ref" : "DBPassword" }, "@", {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, ":", {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "/", { "Ref" : "DBName" },
-          " --db-prefix=drupal_\n",
-          " # use the S3 bucket for shared file storage\n",
-          " cp -R sites/default/files_original/* sites/default/files\n",
-          " cp -R sites/default/files_original/.htaccess sites/default/files\n",
-          "fi\n",
-          "# Copy settings.php file since everything else is configured\n",
-          "cp /home/ec2-user/settings.php /var/www/html/sites/default\n",
-          "rm /home/ec2-user/settings.php\n",
-
-          "# All is well so signal success\n",
-          "/opt/aws/bin/cfn-signal -e 0 -r \"Drupal setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
-
-        ]]}}
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", ["TO_BE_INJECTED"] ]}}
       }
     },
 
-  "WebServerGroup2" : {
+    "WebServerGroup2" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : [ "us-east-1a" ],
@@ -430,29 +365,6 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
-            "packages" : {
-              "yum" : {
-                "httpd" : [],
-                "php" : [],
-                "php-mysql" : [],
-                "php-gd" : [],
-                "php-xml" : [],
-                "php-mbstring" : [],
-                "mysql" : [],
-                "gcc" : [],
-                "make" : [],
-                "libstdc++-devel" : [],
-                "gcc-c++" : [],
-                "fuse" : [],
-                "fuse-devel" : [],
-                "libcurl-devel" : [],
-                "libxml2-devel" : [],
-                "openssl-devel" : [],
-                "mailcap" : []
-
-              }
-            },
-
             "sources" : {
               "/var/www/html" : "http://ftp.drupal.org/files/projects/drupal-7.8.tar.gz",
               "/home/ec2-user" : "http://ftp.drupal.org/files/projects/drush-7.x-4.5.tar.gz",
@@ -460,6 +372,28 @@
             },
 
             "files" : {
+
+              "/etc/cloud-env.sh" : {
+                "content" : { "Fn::Join" : ["", [ 
+                    "export CFN_WaitHandle=", { "Ref" : "WaitHandle" },   "\n",
+                    "export CFN_StackId=",    { "Ref" : "AWS::StackId" }, "\n",
+                    "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
+                    "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
+                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteEmail=",  { "Ref" : "SiteEMail" }, "\n",
+                    "export APP_SitePassword=",  { "Ref" : "SitePassword" }, "\n",
+                    "export DB_Username=",    { "Ref" : "DBUsername" }, "\n",
+                    "export DB_Password=",    { "Ref" : "DBPassword" }, "\n",
+                    "export DB_Name=",        { "Ref" : "DBName" }, "\n",
+                    "export DB_Hostname=",    {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, "\n",
+                    "export DB_Port=",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "\n"
+                  ]]},
+                "mode" : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+                           
               "/etc/passwd-s3fs" : {
                 "content" : { "Fn::Join" : ["", [ { "Ref" : "S3Keys" }, ":", {"Fn::GetAtt": ["S3Keys", "SecretAccessKey"]}, "\n" ]]},
                 "mode" : "000400",
@@ -500,13 +434,6 @@
                 "owner" : "root",
                 "group" : "root"
               }
-            },
-
-            "services" : {
-              "sysvinit" : {
-                "httpd" : { "enabled" : "true", "ensureRunning" : "true" },
-                "sendmail" : { "enabled" : "false", "ensureRunning" : "false" }
-              }
             }
           }
         }
@@ -517,68 +444,9 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -v\n",
-          "yum update -y aws-cfn-bootstrap\n",
-
-          "# Helper function\n",
-          "function error_exit\n",
-          "{\n",
-          " /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
-          " exit 1\n",
-          "}\n",
-
-          "# Install Apache Web Server, MySQL and Drupal\n",
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r LaunchConfig2 ",
-          " --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
-          "# Install s3fs\n",
-          "cd /home/ec2-user/s3fs/s3fs-1.61\n",
-          "./configure --prefix=/usr\n",
-          "make\n",
-          "make install\n",
-
-          "# Move the website files to the top level\n",
-          "mv /var/www/html/drupal-7.8/* /var/www/html\n",
-          "mv /var/www/html/drupal-7.8/.htaccess /var/www/html\n",
-          "rm -Rf /var/www/html/drupal-7.8\n",
-
-          "# Mount the S3 bucket\n",
-          "mv /var/www/html/sites/default/files /var/www/html/sites/default/files_original\n",
-          "mkdir -p /var/www/html/sites/default/files\n",
-          "s3fs -o allow_other -o use_cache=/tmp ", { "Ref" : "S3Bucket" } ," /var/www/html/sites/default/files || error_exit 'Failed to mount the S3 bucket'\n",
-          "echo `hostname` >> /var/www/html/sites/default/files/hosts\n",
-
-          "# Make changes to Apache Web Server configuration\n",
-          "sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf\n",
-          "service httpd restart\n",
-
-          "# Only execute the site install if we are the first host up - otherwise we'll end up losing all the data\n",
-          "read first < /var/www/html/sites/default/files/hosts\n",
-          "if [ `hostname` = $first ]\n",
-          "then\n",
-          " # Create the site in Drupal\n",
-          " cd /var/www/html\n",
-          " ~ec2-user/drush/drush site-install standard --yes",
-          " --site-name='", { "Ref" : "SiteName" }, "' --site-mail=", { "Ref" : "SiteEMail" },
-          " --account-name=", { "Ref" : "SiteAdmin" }, " --account-pass=", { "Ref" : "SitePassword" },
-          " --db-url=mysql://", { "Ref" : "DBUsername" }, ":", { "Ref" : "DBPassword" }, "@", {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, ":", {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "/", { "Ref" : "DBName" },
-          " --db-prefix=drupal_\n",
-          " # use the S3 bucket for shared file storage\n",
-          " cp -R sites/default/files_original/* sites/default/files\n",
-          " cp -R sites/default/files_original/.htaccess sites/default/files\n",
-          "fi\n",
-          "# Copy settings.php file since everything else is configured\n",
-          "cp /home/ec2-user/settings.php /var/www/html/sites/default\n",
-          "rm /home/ec2-user/settings.php\n",
-
-          "# All is well so signal success\n",
-          "/opt/aws/bin/cfn-signal -e 0 -r \"Drupal setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
-
-        ]]}}
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", ["TO_BE_INJECTED"]]}}
       }
     },
-
 
 
     "WaitHandle" : {
@@ -641,12 +509,14 @@
       }
     }
   },
-
+  
   "Outputs" : {
+
     "WebsiteURL" : {
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}]] },
       "Description" : "Drupal Website"
     },
+
     "MasterJDBCConnectionString": {
       "Description" : "JDBC connection string for the master database",
       "Value" : { "Fn::Join": [ "", [ "jdbc:mysql://",
@@ -659,6 +529,15 @@
     "ReplicaJDBCConnectionString": {
       "Description" : "JDBC connection string for the replica database",
       "Value" : { "Fn::Join": [ "", [ "jdbc:mysql://",
+                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
+                                      ":",
+                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },
+                                      "/",
+                                      { "Ref": "DBName" }]]}
+    },
+    "MySQLConnectionString": {
+      "Description" : "Connection string for the MySQL database",
+        "Value" : { "Fn::Join": [ "", [ "mysql://",
                                       { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
                                       ":",
                                       { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },

@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+#
+# This extracts a list of Parameters from a CloudFormation template
+#
+import json
+import os
+import argparse
+
+# Parse script agruments
+parser = argparse.ArgumentParser()
+parser.add_argument("template", help="The Cloudformation Template")
+
+args = parser.parse_args()
+
+# Read template and user-data script
+template = json.load(open(args.template,'r'))
+params  = template['Parameters']
+for k in params.keys():
+	print k
