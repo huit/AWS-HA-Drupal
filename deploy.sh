@@ -37,14 +37,14 @@ rm -f ${USERDATA2} ${TMPFILE}
 # Load parameters from environment and build params argument line for 
 #
 
-PARAM_ARGS=""
+PARAM_ARGS="--parameters "
 PARAM_NAMES=$( ./bin/find_cf_params ${TEMPLATE_IN_FILE} )
 
 for P in ${PARAM_NAMES}
 do
 	V=$( eval echo \${${P}} )
 	if ! [ -z $V ]; then 
-  		PARAM_ARGS="$PARAM_ARGS --parameter ParameterKey=${P},ParameterValue=${V}"
+  		PARAM_ARGS="$PARAM_ARGS ParameterKey=${P},ParameterValue=${V}"
   	fi
 done
 
