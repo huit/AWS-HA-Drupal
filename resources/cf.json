@@ -7,7 +7,6 @@
 
     "KeyName": {
       "Description" : "HPAC EC2 KeyPair to enable SSH access to the instances",
-      "Default" : "HPACDrupalKeyPair",
       "Type": "String",
       "MinLength": "1",
       "MaxLength": "255",
@@ -23,7 +22,7 @@
     },
 
     "SiteName": {
-      "Default": "HPACDrupal",
+      "Default": "HPAC Drupal",
       "Description" : "HPAC Drupal Web Site",
       "Type": "String"
     },
