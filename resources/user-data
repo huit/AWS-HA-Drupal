@@ -3,11 +3,7 @@
 
 
 
-RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
-RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
-RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap"
 
-yum -y install $RPMS
 
 yum update -y aws-cfn-bootstrap
 
@@ -28,6 +24,21 @@ function error_exit
 # Load params as an environment
 #
 [ -r /etc/cloud-env.sh ] && source /etc/cloud-env.sh
+
+#==================================================
+#
+# From here down, the Parameters are available
+#  as environment variables.
+#
+# Add build steps from here down ...
+#
+#==================================================
+
+RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
+RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
+RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap"
+
+yum -y install $RPMS
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
