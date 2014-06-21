@@ -14,6 +14,13 @@
       "ConstraintDescription" : "can contain only ASCII characters."
     },
 
+    "Label": {
+      "Description" : "A label to distinguish this deployment from others",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "255"
+    },
+
     "InstanceType" : {
       "Description" : "WebServer EC2 instance type",
       "Type" : "String",
@@ -254,7 +261,10 @@
         "MaxSize" : "5",
         "DesiredCapacity" : { "Ref" : "WebServerCapacity" },
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
-        "Tags" : [{ "Key"  : "Name", "Value" : "Joels Instance", "PropagateAtLaunch" : "true" }]
+        "Tags" : [
+          { "Key"  : "Label", "Value" : {"Ref" : "Label"}, "PropagateAtLaunch" : "true" },
+          { "Key"  : "Name", "Value" : "Joels Instance", "PropagateAtLaunch" : "true" }
+        ]
       }
     },
 
@@ -280,19 +290,19 @@
 
               "/etc/cloud-env.sh" : {
                 "content" : { "Fn::Join" : ["", [ 
-                    "export CFN_WaitHandle=", { "Ref" : "WaitHandle" },   "\n",
-                    "export CFN_StackId=",    { "Ref" : "AWS::StackId" }, "\n",
-                    "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
-                    "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
-                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
-                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
-                    "export APP_SiteEmail=",  { "Ref" : "SiteEMail" }, "\n",
-                    "export APP_SitePassword=",  { "Ref" : "SitePassword" }, "\n",
-                    "export DB_Username=",    { "Ref" : "DBUsername" }, "\n",
-                    "export DB_Password=",    { "Ref" : "DBPassword" }, "\n",
-                    "export DB_Name=",        { "Ref" : "DBName" }, "\n",
-                    "export DB_Hostname=",    {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, "\n",
-                    "export DB_Port=",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "\n"
+                    "export CFN_WaitHandle='", { "Ref" : "WaitHandle" },   "'\n",
+                    "export CFN_StackId='",    { "Ref" : "AWS::StackId" }, "'\n",
+                    "export CFN_Region='",     { "Ref" : "AWS::Region" },  "'\n",
+                    "export CFN_S3Bucket='",   { "Ref" : "S3Bucket" }, "'\n",
+                    "export APP_SiteName='",   { "Ref" : "SiteName" }, "'\n",
+                    "export APP_SiteName='",   { "Ref" : "SiteName" }, "'\n",
+                    "export APP_SiteEmail='",  { "Ref" : "SiteEMail" }, "'\n",
+                    "export APP_SitePassword='",  { "Ref" : "SitePassword" }, "'\n",
+                    "export DB_Username='",    { "Ref" : "DBUsername" }, "'\n",
+                    "export DB_Password='",    { "Ref" : "DBPassword" }, "'\n",
+                    "export DB_Name='",        { "Ref" : "DBName" }, "'\n",
+                    "export DB_Hostname='",    {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, "'\n",
+                    "export DB_Port='",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "'\n"
                   ]]},
                 "mode" : "000400",
                 "owner" : "root",
@@ -345,7 +355,7 @@
         "KeyName" : { "Ref" : "KeyName" },
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
                   "#!/bin/bash -v\n",
-          "export CFN_WaitHandle=", { "Ref" : "WaitHandle" }, "\n",
+          "export CFN_WaitHandle='", { "Ref" : "WaitHandle" }, "'\n",
           "export CFN_StackId=", { "Ref" : "AWS::StackId" }, "\n",  
           "export CFN_Region=",  { "Ref" : "AWS::Region" }, "\n",
           "# MORE INJECTED BELOW \n"   
@@ -380,7 +390,7 @@
 
               "/etc/cloud-env.sh" : {
                 "content" : { "Fn::Join" : ["", [ 
-                    "export CFN_WaitHandle=", { "Ref" : "WaitHandle" },   "\n",
+                    "export CFN_WaitHandle='", { "Ref" : "WaitHandle" },   "'\n",
                     "export CFN_StackId=",    { "Ref" : "AWS::StackId" }, "\n",
                     "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
                     "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
@@ -451,9 +461,9 @@
         "KeyName" : { "Ref" : "KeyName" },
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "export CFN_WaitHandle=", { "Ref" : "WaitHandle" }, "\n",
-          "export CFN_StackId=", { "Ref" : "AWS::StackId" }, "\n",  
-          "export CFN_Region=",  { "Ref" : "AWS::Region" }, "\n",
+          "export CFN_WaitHandle='", { "Ref" : "WaitHandle"   }, "'\n",
+          "export CFN_StackId=",    { "Ref" : "AWS::StackId" }, "\n",  
+          "export CFN_Region=",     { "Ref" : "AWS::Region"  }, "\n",
           "# MORE INJECTED BELOW \n"               
         ]]}}
       }

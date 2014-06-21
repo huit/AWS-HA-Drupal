@@ -1,9 +1,6 @@
 #!/bin/bash -v
 
-#
-# Load params as an environment
-#
-[ -r /etc/cloud-env.sh ] && source /etc/cloud-env.sh
+
 
 
 RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
@@ -22,10 +19,15 @@ function error_exit
 }
 
 
-# Install Apache Web Server, MySQL and Drupal
+# Do some basic setup through CFN
 /opt/aws/bin/cfn-init -s ${CFN_StackId} \
   -r LaunchConfig1 \
   --region ${CFN_Region} || error_exit 'Failed to run cfn-init'
+
+#
+# Load params as an environment
+#
+[ -r /etc/cloud-env.sh ] && source /etc/cloud-env.sh
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61

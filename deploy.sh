@@ -25,7 +25,7 @@ CMD="aws cloudformation create-stack \
 #
 USERDATA1=resources/user-data
 USERDATA2=$(mktemp -t user-data)
-cat resources/user-data | sed 's/LaunchConfig1/LaunchConfig2/g' > ${USERDATA2}
+cat resources/user-data | sed 's/LaunchConfig1/AdminLaunchConfig/g' > ${USERDATA2}
 
 TMPFILE=$(mktemp -t cf)
 ./bin/gen_cf_json "${TEMPLATE_IN_FILE}" "${USERDATE_IN_FILE}" LaunchConfig1 > ${TMPFILE}
