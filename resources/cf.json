@@ -343,15 +343,21 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", ["TO_BE_INJECTED"] ]}}
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+                  "#!/bin/bash -v\n",
+          "export CFN_WaitHandle=", { "Ref" : "WaitHandle" }, "\n",
+          "export CFN_StackId=", { "Ref" : "AWS::StackId" }, "\n",  
+          "export CFN_Region=",  { "Ref" : "AWS::Region" }, "\n",
+          "# MORE INJECTED BELOW \n"   
+         ]]}}
       }
     },
 
-    "WebServerGroup2" : {
+    "AdminServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : [ "us-east-1a" ],
-        "LaunchConfigurationName" : { "Ref" : "LaunchConfig2" },
+        "LaunchConfigurationName" : { "Ref" : "AdminLaunchConfig" },
         "MinSize" : "1",
         "MaxSize" : "1",
         "DesiredCapacity" : { "Ref" : "WebServerCapacitySingle" },
@@ -359,7 +365,7 @@
       }
     },
 
-    "LaunchConfig2": {
+    "AdminLaunchConfig": {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
@@ -443,7 +449,13 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", ["TO_BE_INJECTED"]]}}
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "export CFN_WaitHandle=", { "Ref" : "WaitHandle" }, "\n",
+          "export CFN_StackId=", { "Ref" : "AWS::StackId" }, "\n",  
+          "export CFN_Region=",  { "Ref" : "AWS::Region" }, "\n",
+          "# MORE INJECTED BELOW \n"               
+        ]]}}
       }
     },
 

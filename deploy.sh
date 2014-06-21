@@ -29,7 +29,7 @@ cat resources/user-data | sed 's/LaunchConfig1/LaunchConfig2/g' > ${USERDATA2}
 
 TMPFILE=$(mktemp -t cf)
 ./bin/gen_cf_json "${TEMPLATE_IN_FILE}" "${USERDATE_IN_FILE}" LaunchConfig1 > ${TMPFILE}
-./bin/gen_cf_json "${TMPFILE}"          "${USERDATA2}"        LaunchConfig2 > ${TEMPLATE_OUT_FILE}
+./bin/gen_cf_json "${TMPFILE}"          "${USERDATA2}"        AdminLaunchConfig > ${TEMPLATE_OUT_FILE}
 
 rm -f ${USERDATA2} ${TMPFILE}
 
