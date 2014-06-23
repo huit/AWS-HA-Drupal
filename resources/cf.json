@@ -263,7 +263,7 @@
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
         "Tags" : [
           { "Key"  : "Label", "Value" : {"Ref" : "Label"}, "PropagateAtLaunch" : "true" },
-          { "Key"  : "Name", "Value" : "Joels Instance", "PropagateAtLaunch" : "true" }
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Instance"]]}}
         ]
       }
     },
@@ -371,7 +371,9 @@
         "MinSize" : "1",
         "MaxSize" : "1",
         "DesiredCapacity" : { "Ref" : "WebServerCapacitySingle" },
-        "Tags" : [{ "Key"  : "Name", "Value" : "Joels Instance", "PropagateAtLaunch" : "true" }]
+        "Tags" : [ 
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", " Admin Instance"]]}}
+        ]
       }
     },
 
@@ -491,12 +493,14 @@
         "DBInstanceClass" : { "Ref" : "DBClass" },
         "Engine" : "MySQL",
         "EngineVersion" : "5.6",
-        "DBInstanceIdentifier" : "JoelMasterDB2",
+        "DBInstanceIdentifier" : { "Fn::Join" : ["", [{"Ref" : "Label"} ,"MasterDatabase"]]},
         "DBSecurityGroups": [ { "Ref": "DBSecurityGroup" } ],
         "MasterUsername" : { "Ref" : "DBUsername" },
         "MasterUserPassword" : { "Ref" : "DBPassword" },
         "MultiAZ" : { "Ref" : "MultiAZDatabase" },
-        "Tags" : [{ "Key"  : "Name", "Value" : "Joels Drupal Master Database" }]
+        "Tags" : [
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Master Database"]]}}
+        ]
       },
       "DeletionPolicy" : "Snapshot"
     },
@@ -504,10 +508,12 @@
     "ReplicaDB" : {
       "Type" : "AWS::RDS::DBInstance",
       "Properties" : {
-        "DBInstanceIdentifier" : "JoelSlaveDB2",
+        "DBInstanceIdentifier" : { "Fn::Join" : ["", [{"Ref" : "Label"} ,"ReadReplicaDatabase"]]},
         "SourceDBInstanceIdentifier" : { "Ref" : "MasterDB" },
         "DBInstanceClass" : { "Ref" : "DBClass" },
-        "Tags" : [{ "Key"  : "Name", "Value" : "Joels Drupal Read Replica Database" }]
+        "Tags" : [
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Read Replica Database"]]}}
+        ]
       }
     },
 
