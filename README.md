@@ -15,6 +15,11 @@ To use this repo, start off by setting the needed parameters for the CloudFormat
 $> export KeyName=my-key
 ```
 
+In particular, you'll need to set at a minimum the following parameters:
+- `KeyName`
+- `SitePassword`
+- `DBPassword`
+
 Then when ready, you can start the CloudFormation stack using the deploy script
 
 ```
