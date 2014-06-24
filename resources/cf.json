@@ -51,7 +51,6 @@
     },
 
     "SitePassword": {
-      "Default": "hpacadmin",
       "NoEcho": "true",
       "Description" : "The Drupal site admin account password",
       "Type": "String",
@@ -83,7 +82,6 @@
     },
 
     "DBPassword": {
-      "Default": "hpacadmin",
       "NoEcho": "true",
       "Description" : "The Drupal database admin account password",
       "Type": "String",
