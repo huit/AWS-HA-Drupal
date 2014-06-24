@@ -70,7 +70,7 @@ then
 
   DB_URL=mysql://${DB_Username}:${DB_Password}@${DB_Hostname}:${DB_Port}/${DB_Name}
 
-  ~ec2-user/drush/drush site-install standard \
+  ~ec2-user/drush/drush site-install standard \ 
      --yes \
      --site-name="${APP_SiteName}" \
      --site-mail="${APP_EMail}" \
