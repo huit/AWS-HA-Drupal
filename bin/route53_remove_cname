@@ -1,0 +1,38 @@
+#!/bin/bash
+
+source bin/route53_setup_proxy_credentials
+
+usage() {
+	echo Usage:
+	echo   $0 [cname] [target-hostname]
+	exit 1
+}
+
+if [ "x" = "x${AWS_ROUTE53_ZONE_ID}" ]; then
+	echo "Please set the AWS_ROUTE53_ZONE_ID environment variable to the desired zone."
+	exit 1
+fi
+
+if [ "$#" -ne 2 ]; then
+    usage
+fi
+
+# TODO: parse record sets and remove without needing to specify hostname
+#
+# Define change as JSON
+#
+ACTION="DELETE"
+CNAME=$(  echo $1 | tr '[:upper:]' '[:lower:]' )
+ARECORD=$(echo $2 | tr '[:upper:]' '[:lower:]' )
+JSON={\"Changes\":[{\"Action\":\"${ACTION}\",\"ResourceRecordSet\":{\"Name\":\"${CNAME}\",\"Type\":\"CNAME\",\"TTL\":10,\"ResourceRecords\":[{\"Value\":\"${ARECORD}\"}]}}]}
+
+#
+# Execute changes
+#
+aws --profile nephoeng route53 change-resource-record-sets \
+  --hosted-zone-id  ${AWS_ROUTE53_ZONE_ID} \
+  --change-batch "${JSON}"
+
+
+
+
