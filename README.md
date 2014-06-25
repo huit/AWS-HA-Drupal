@@ -3,7 +3,7 @@ Scalable Drupal
 
 Welcome to the HPAC Production Drupal github repository.  This repository contains the cloudformation and scripts need  Please see the wiki located at 
 
-* https://github.com/huit/AWS-HA-Drupal.wiki.git 
+* https://github.com/huit/AWS-HA-Drupal.wiki
 
 for all current documentation.
 
