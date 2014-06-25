@@ -10,12 +10,15 @@ TEMPLATE_OUT_FILE=template.json
 #
 # AWS stack create command line and options
 #
-STACK_NAME=${STACK_NAME:-Drupal-Stack}
-ROLLBACK_ARG=" --disable-rollback "
+if [ -z "${Label}" ]; then
+	echo "Please set the \"Label\" environment variable to proceed."
+	exit 1
+fi
 
+ROLLBACK_ARG=" --disable-rollback "
 CMD="aws cloudformation create-stack \
         --capabilities CAPABILITY_IAM \
-        --stack-name ${STACK_NAME} \
+        --stack-name ${Label} \
         ${ROLLBACK_ARG} \
         --template-body file://${TEMPLATE_OUT_FILE}"
 
@@ -37,7 +40,7 @@ rm -f ${USERDATA2} ${TMPFILE}
 # Load parameters from environment and build params argument line for 
 #
 
-PARAM_ARGS="--parameters "
+PARAM_ARGS=
 PARAM_NAMES=$( ./bin/find_cf_params ${TEMPLATE_IN_FILE} )
 
 for P in ${PARAM_NAMES}
@@ -47,6 +50,10 @@ do
   		PARAM_ARGS="$PARAM_ARGS ParameterKey=${P},ParameterValue=${V}"
   	fi
 done
+
+if ! [ x =  "x${PARAM_ARGS}" ]; then
+	PARAM_ARGS="--parameters $PARAM_ARGS"
+fi
 
 #
 # Report and then run it
