@@ -10,12 +10,15 @@ TEMPLATE_OUT_FILE=template.json
 #
 # AWS stack create command line and options
 #
-STACK_NAME=${STACK_NAME:-Drupal-Stack}
-ROLLBACK_ARG=" --disable-rollback "
+if [ -z "${Label}" ]; then
+	echo "Please set the \"Label\" environment variable to proceed."
+	exit 1
+fi
 
+ROLLBACK_ARG=" --disable-rollback "
 CMD="aws cloudformation create-stack \
         --capabilities CAPABILITY_IAM \
-        --stack-name ${STACK_NAME} \
+        --stack-name ${Label} \
         ${ROLLBACK_ARG} \
         --template-body file://${TEMPLATE_OUT_FILE}"
 
@@ -48,8 +51,8 @@ do
   	fi
 done
 
-if ! [ -z "${PARAM_ARGS}" ]; then
-	$PARAMS_ARGS="--parameters $PARAMS_ARGS"
+if ! [ x =  "x${PARAM_ARGS}" ]; then
+	PARAM_ARGS="--parameters $PARAM_ARGS"
 fi
 
 #
