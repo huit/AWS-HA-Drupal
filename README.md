@@ -16,6 +16,7 @@ $> export KeyName=my-key
 ```
 
 In particular, you'll need to set at a minimum the following parameters:
+- `Label`
 - `KeyName`
 - `SitePassword`
 - `DBPassword`
@@ -26,7 +27,7 @@ Then when ready, you can start the CloudFormation stack using the deploy script
 $> ./deploy
 ```
 
-If there are missing parameters, set them as environment variables, and then start again. The default stack name is "Drupal-Stack", but this can be set by setting the `STACK_NAME` environment variable. The script will also leave a copy of the generated cloudformation template in the current directory named `template.json`.
+If there are missing parameters, set them as environment variables, and then start again.  The script will also leave a copy of the generated cloudformation template in the current directory named `template.json`.
 
 To see the list of known parameters, you can use the helper script
 
