@@ -29,14 +29,14 @@ $> ./deploy.sh
 
 ###Output of the script:
 
-Performing a create-stack in AWS!
-Command to execute:
------------------------
 ```
-aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name HPAC-Drupal-Instance --disable-rollback --template-body file://template.json --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
-{
-    "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/6f3b2ae0-fd26-11e3-99fa-500150b34c44"
-}
+$> Performing a create-stack in AWS!
+$> Command to execute:
+$> -----------------------
+$> aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name HPAC-Drupal-Instance --disable-rollback --template-body file://template.json --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
+$> {
+$> "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/6f3b2ae0-fd26-11e3-99fa-500150b34c44"
+$> }
 
 ```
 
@@ -111,8 +111,10 @@ $> ./deploy.sh
 ###Output of the script:
 
 ```
-$> Performing an delete-stack in AWS of the Cloudstack named HPAC-Drupal-Instance! 
-
+$> Performing an delete-stack in AWS of the Cloudstack named HPAC-Drupal-Instance!
+$> Command to execute:
+$> -----------------------
+$> aws cloudformation delete-stack --stack-name HPAC-Drupal-Instance
 ```
 
 ###AWS Console
