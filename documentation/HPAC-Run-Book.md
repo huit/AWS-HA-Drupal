@@ -3,9 +3,22 @@
 
 Welcome to the HPAC Production Drupal Run Book Document.  This file contains all of the documentation associated with the syntax for creating,updating and deleting the production AWS HA Drupal instances using automated scripts and CloudFormation Stack Templates.
 
-### Cloudformation Template Location
+## Preparing Your Environment
 
-The cloudformation template located here
+###Updating your git environment
+
+The git repository associated with the HPAC Production Drupal HA sites is called "AWS-HA-Drupal".  Please ensure that you are located in the proper directory and that your repository is up to date with the master.  Perform the following commands to ensure that you have the latest code from the "AWS-HA-Drupal" repository.
+
+```
+$> git pull
+
+```
+
+Before proceeding, make sure that no errors occurred during the ```git pull```.
+
+## Cloudformation Template Location
+
+The cloudformation template located here ```your_git_user_name/AWS-HA-Drupal```
 
 ## Creating the HPAC Drupal HA Instances using CloudFormation and the aws create-stack command
 
