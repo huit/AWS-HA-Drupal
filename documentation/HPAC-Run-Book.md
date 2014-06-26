@@ -30,12 +30,12 @@ $> ./deploy.sh
 ###Output of the script:
 
 ```
-$> Performing a create-stack in AWS!
+$> Performing an create-stack in AWS of the Cloudstack named HPAC-Drupal-Instance!
 $> Command to execute:
 $> -----------------------
 $> aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name HPAC-Drupal-Instance --disable-rollback --template-body file://template.json --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
 $> {
-$> "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/6f3b2ae0-fd26-11e3-99fa-500150b34c44"
+$> "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/e317ad30-fd44-11e3-a961-500162a66cb4"
 $> }
 
 ```
@@ -75,7 +75,10 @@ $> ./deploy.sh
 ###NOTE: The below error occurs because of the resilency of the HPAC Template pararmeters that are in inherent in the HPAC CloudFormation Template.  The instances will typically recreate themselves within minutes thus the reason that "No updates are to be performed".  This may differ if for some reason this resilency fails for someunknown reason, and your output may differ.
 
 ```
-$> Performing an update-stack in AWS!
+$> Performing an update-stack in AWS of the Cloudstack named HPAC-Drupal-Instance!
+$> Command to execute:
+$> -----------------------
+$> aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name HPAC-Drupal-Instance --template-body file://template.json --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
 
 $> A client error (ValidationError) occurred when calling the UpdateStack operation: No updates are to be performed.
 
