@@ -405,6 +405,7 @@
           "# Copy settings.php file since everything else is configured\n",
           "cp /home/ec2-user/settings.php /var/www/html/sites/default\n",
           "rm /home/ec2-user/settings.php\n",
+          "/usr/bin/mysql -u ", { "Ref" : "DBUsername" }, " -p", { "Ref" : "DBPassword" }, " -h ", {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, " -D ", { "Ref" : "DBName" }, " -e 'update drupal_block set status = 0 where delta = \"login\"'\n",
 
           "# All is well so signal success\n",
           "/opt/aws/bin/cfn-signal -e 0 -r \"Drupal setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
