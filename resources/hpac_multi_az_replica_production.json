@@ -388,6 +388,7 @@
 
           "# Make changes to Apache Web Server configuration\n",
           "sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf\n",
+          "sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\.php|install\.php|update\.php|xmlrpc\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess\n",
           "service httpd restart\n",
 
           "# Only execute the site install if we are the first host up - otherwise we'll end up losing all the data\n",
