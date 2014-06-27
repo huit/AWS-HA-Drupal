@@ -6,7 +6,7 @@ if [ "x" = "x${AWS_ROUTE53_ZONE_ID}" ]; then
 	echo "Please set the AWS_ROUTE53_ZONE_ID environment variable to the desired zone."
 	exit 1
 fi
-aws --profile nephoeng route53 list-resource-record-sets --output text --hosted-zone-id  ${AWS_ROUTE53_ZONE_ID}
+aws route53 list-resource-record-sets --output text --hosted-zone-id  ${AWS_ROUTE53_ZONE_ID}
 
 
 
