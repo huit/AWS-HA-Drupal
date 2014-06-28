@@ -310,9 +310,9 @@
               "/home/ec2-user/append_rewriterule.sh" : {
                 "content" : { "Fn::Join" : ["", [ 
                     "#!/bin/bash\n",
-                    "sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\.php|install\.php|update\.php|xmlrpc\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess\n"
+                    "sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\\.php|install\\.php|update\\.php|xmlrpc\\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess\n"
                   ]]},
-                "mode" : "000700",
+                "mode" : "000544",
                 "owner" : "root",
                 "group" : "root"
               },
