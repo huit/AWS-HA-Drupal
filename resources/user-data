@@ -59,8 +59,8 @@ echo `hostname` >> /var/www/html/sites/default/files/hosts
 
 # Make changes to Apache Web Server configuration
 sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
-if [ -x /usr/local/bin/append_rewriterule.sh ]; then
-  /usr/local/bin/append_rewriterule.sh
+if [ -x /home/ec2-user/append_rewriterule.sh ]; then
+  /home/ec2-user/append_rewriterule.sh
 fi
 service httpd restart
 
