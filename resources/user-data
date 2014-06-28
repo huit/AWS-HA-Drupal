@@ -59,7 +59,9 @@ echo `hostname` >> /var/www/html/sites/default/files/hosts
 
 # Make changes to Apache Web Server configuration
 sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
-sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\.php|install\.php|update\.php|xmlrpc\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess
+if [ -x /usr/local/bin/append_rewriterule.sh ]; then
+  /usr/local/bin/append_rewriterule.sh
+fi
 service httpd restart
 
 # Only execute the site install if we are the first host up - otherwise we'll end up losing all the data

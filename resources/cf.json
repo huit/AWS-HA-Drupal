@@ -307,6 +307,16 @@
                 "group" : "root"
               },
 
+              "/usr/local/bin/append_rewriterule.sh" : {
+                "content" : { "Fn::Join" : ["", [ 
+                    "#!/bin/bash\n",
+                    "sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\.php|install\.php|update\.php|xmlrpc\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess\n"
+                  ]]},
+                "mode" : "000700",
+                "owner" : "root",
+                "group" : "root"
+              },
+
               "/home/ec2-user/settings.php" : {
                 "content" : { "Fn::Join" : ["", [
                   "<?php\n",
@@ -399,7 +409,7 @@
                     "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
                     "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
                     "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
-                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteAdmin='",   { "Ref" : "SiteAdmin" }, "'\n",
                     "export APP_SiteEmail=",  { "Ref" : "SiteEMail" }, "\n",
                     "export APP_SitePassword=",  { "Ref" : "SitePassword" }, "\n",
                     "export DB_Username=",    { "Ref" : "DBUsername" }, "\n",
