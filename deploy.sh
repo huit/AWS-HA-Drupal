@@ -78,10 +78,10 @@ if [ "${CloudCommand}" != 'delete-stack' ]; then
 	# Generate CF JSON (this is ugly! REP)
 	#
 	USERDATA1=resources/user-data
-	USERDATA2=$(mktemp -t user-data)
+	USERDATA2=$(mktemp -t user-data.XXXXXXXXXX)
 	cat resources/user-data | sed 's/LaunchConfig1/AdminLaunchConfig/g' > ${USERDATA2}
 
-	TMPFILE=$(mktemp -t cf)
+	TMPFILE=$(mktemp -t cf.XXXXXXXXXX)
 	./bin/gen_cf_json "${TEMPLATE_IN_FILE}" "${USERDATE_IN_FILE}" LaunchConfig1 > ${TMPFILE}
 	./bin/gen_cf_json "${TMPFILE}"          "${USERDATA2}"        AdminLaunchConfig > ${TEMPLATE_OUT_FILE}
 
