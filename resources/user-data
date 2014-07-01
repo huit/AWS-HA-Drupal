@@ -36,9 +36,43 @@ function error_exit
 
 RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
 RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
-RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap"
+RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git"
 
 yum -y install $RPMS
+
+# Install s3cmd
+cd /home/ec2-user
+git clone https://github.com/s3tools/s3cmd.git
+cd s3cmd
+sudo python setup.py install
+
+# Heredoc to enable syslog to s3
+cat << syslogEOF > /etc/logrotate.d/syslog
+/var/log/cron
+/var/log/maillog
+/var/log/messages
+/var/log/secure
+/var/log/spooler
+{
+  hourly
+  missingok
+  sharedscripts
+  postrotate
+  dateext
+  dateformat -%Y-%m-%d-%s
+    /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    BUCKET=boot_camp_logging_bucket
+    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
+    /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/maillog-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/secure-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/spooler-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+  endscript
+}
+syslogEOF
+
+mv /etc/cron.daily/logrotate /etc/cron.hourly/.
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
