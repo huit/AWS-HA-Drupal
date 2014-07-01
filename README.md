@@ -24,7 +24,7 @@ In particular, you'll need to set at a minimum the following parameters:
 Then when ready, you can start the CloudFormation stack using the deploy script
 
 ```
-$> ./deploy
+$> ./deploy create-stack
 ```
 
 If there are missing parameters, set them as environment variables, and then start again.  The script will also leave a copy of the generated cloudformation template in the current directory named `template.json`.

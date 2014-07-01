@@ -59,6 +59,9 @@ echo `hostname` >> /var/www/html/sites/default/files/hosts
 
 # Make changes to Apache Web Server configuration
 sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
+if [ -x /home/ec2-user/append_rewriterule.sh ]; then
+  /home/ec2-user/append_rewriterule.sh
+fi
 service httpd restart
 
 # Only execute the site install if we are the first host up - otherwise we'll end up losing all the data
@@ -87,6 +90,7 @@ fi
 # Copy settings.php file since everything else is configured
 cp /home/ec2-user/settings.php /var/www/html/sites/default
 rm /home/ec2-user/settings.php
+mysql -u ${DB_Username} -p${DB_Password} -h ${DB_Hostname} -D ${DB_Name} -e 'update drupal_block set status = 0 where delta = "login"'
 
 # Start services
 chkconfig httpd on    && service httpd restart 
