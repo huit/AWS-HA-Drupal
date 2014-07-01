@@ -54,12 +54,11 @@ cat << syslogEOF > /etc/logrotate.d/syslog
 /var/log/secure
 /var/log/spooler
 {
-  hourly
   missingok
   sharedscripts
-  postrotate
   dateext
   dateformat -%Y-%m-%d-%s
+  postrotate
     /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
     BUCKET=boot_camp_logging_bucket
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
@@ -75,7 +74,6 @@ syslogEOF
 # Enable apache logging to s3
 cat << httpdEOF > /etc/logrotate.d/httpd
 /var/log/httpd/*log {
-  hourly
   missingok
   notifempty
   sharedscripts
