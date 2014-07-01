@@ -46,7 +46,7 @@ git clone https://github.com/s3tools/s3cmd.git
 cd s3cmd
 python setup.py install
 
-# Heredoc to enable syslog to s3
+# Enable system logging to s3
 cat << syslogEOF > /etc/logrotate.d/syslog
 /var/log/cron
 /var/log/maillog
@@ -71,6 +71,24 @@ cat << syslogEOF > /etc/logrotate.d/syslog
   endscript
 }
 syslogEOF
+
+# Enable apache logging to s3
+cat << httpdEOF > /etc/logrotate.d/httpd
+/var/log/httpd/*log {
+  hourly
+  missingok
+  notifempty
+  sharedscripts
+  dateext
+  dateformat -%Y-%m-%d-%s
+  postrotate
+    BUCKET=boot_camp_logging_bucket
+    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
+    /usr/bin/s3cmd -m text/plain sync /var/log/httpd/*log s3://${BUCKET}/${INSTANCE_ID}/var/log/httpd/
+    /sbin/service httpd reload > /dev/null 2>/dev/null || true
+  endscript
+}
+httpdEOF
 
 mv /etc/cron.daily/logrotate /etc/cron.hourly/.
 
