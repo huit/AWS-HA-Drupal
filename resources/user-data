@@ -36,7 +36,7 @@ function error_exit
 
 RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
 RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
-RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git"
+RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git python-dateutil"
 
 yum -y install $RPMS
 
@@ -44,7 +44,7 @@ yum -y install $RPMS
 cd /home/ec2-user
 git clone https://github.com/s3tools/s3cmd.git
 cd s3cmd
-sudo python setup.py install
+python setup.py install
 
 # Heredoc to enable syslog to s3
 cat << syslogEOF > /etc/logrotate.d/syslog
