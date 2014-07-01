@@ -59,14 +59,14 @@ cat << syslogEOF > /etc/logrotate.d/syslog
   dateext
   dateformat -%Y-%m-%d-%s
   postrotate
-    /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    /bin/kill -HUP \`cat /var/run/syslogd.pid 2> /dev/null\` 2> /dev/null || true
     BUCKET=boot_camp_logging_bucket
-    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/maillog-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/secure-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/spooler-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    INSTANCE_ID=\`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"\`
+    /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://\${BUCKET}/\${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://\${BUCKET}/\${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/maillog-* s3://\${BUCKET}/\${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/secure-* s3://\${BUCKET}/\${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/spooler-* s3://\${BUCKET}/\${INSTANCE_ID}/var/log/
   endscript
 }
 syslogEOF
@@ -81,8 +81,8 @@ cat << httpdEOF > /etc/logrotate.d/httpd
   dateformat -%Y-%m-%d-%s
   postrotate
     BUCKET=boot_camp_logging_bucket
-    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    /usr/bin/s3cmd -m text/plain sync /var/log/httpd/*log s3://${BUCKET}/${INSTANCE_ID}/var/log/httpd/
+    INSTANCE_ID=\`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"\`
+    /usr/bin/s3cmd -m text/plain sync /var/log/httpd/*log s3://\${BUCKET}/\${INSTANCE_ID}/var/log/httpd/
     /sbin/service httpd reload > /dev/null 2>/dev/null || true
   endscript
 }
