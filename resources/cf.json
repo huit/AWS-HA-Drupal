@@ -10,7 +10,7 @@
       "Type" : "String",
       "Default" : "S3LoggingAccess",
       "ConstraintDescription" : "Must be a valid IAM Role"
-    }
+    },
 
     "KeyName": {
       "Description" : "HPAC EC2 KeyPair to enable SSH access to the instances",
@@ -185,11 +185,12 @@
 
   "Resources" : {
 
-  "InstanceProfile" : {
-    "Type" : "AWS::IAM::InstanceProfile",
-    "Properties" : {
-      "Path" : "/",
-      "Roles" : {"Ref" : "S3LoggingRole"}
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : {"Ref" : "S3LoggingRole"}
+      }
     },
 
     "S3Bucket" : {
