@@ -5,6 +5,13 @@
 
   "Parameters" : {
 
+    "S3LoggingRole" : {
+      "Description" : "Role that allow S3 Logging",
+      "Type" : "String",
+      "Default" : "S3LoggingAccess",
+      "ConstraintDescription" : "Must be a valid IAM Role"
+    },
+
     "KeyName": {
       "Description" : "HPAC EC2 KeyPair to enable SSH access to the instances",
       "Type": "String",
@@ -177,6 +184,14 @@
   },
 
   "Resources" : {
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{"Ref" : "S3LoggingRole"}]
+      }
+    },
 
     "S3Bucket" : {
       "Type" : "AWS::S3::Bucket",
@@ -356,6 +371,7 @@
       },
 
       "Properties": {
+        "IamInstanceProfile" : {"Ref" : "InstanceProfile"},
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType" : { "Ref" : "InstanceType" },
@@ -468,6 +484,7 @@
         }
       },
       "Properties": {
+        "IamInstanceProfile" : {"Ref" : "InstanceProfile"},
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType" : { "Ref" : "InstanceType" },
