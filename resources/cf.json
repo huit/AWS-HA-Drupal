@@ -261,7 +261,7 @@
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
         "Tags" : [
           { "Key"  : "Label", "Value" : {"Ref" : "Label"}, "PropagateAtLaunch" : "true" },
-          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Instance"]]}, "PropagateAtLaunch" : "true"}
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Web Instance"]]}, "PropagateAtLaunch" : "true"}
         ]
       }
     },
@@ -382,7 +382,7 @@
         "Tags" : [ 
           { 
             "Key"  : "Name", 
-            "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", " Admin Instance"]]},
+            "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Admin Instance"]]},
             "PropagateAtLaunch" : "true"
           }
         ]
