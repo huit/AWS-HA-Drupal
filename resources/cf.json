@@ -189,7 +189,7 @@
       "Type" : "AWS::IAM::InstanceProfile",
       "Properties" : {
         "Path" : "/",
-        "Roles" : {"Ref" : "S3LoggingRole"}
+        "Roles" : [{"Ref" : "S3LoggingRole"}]
       }
     },
 
