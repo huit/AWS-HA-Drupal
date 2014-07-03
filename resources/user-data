@@ -41,6 +41,7 @@ RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git python-dateuti
 yum -y install $RPMS
 
 # Install s3cmd
+# Added for Splunk functionality start
 cd /home/ec2-user
 git clone https://github.com/s3tools/s3cmd.git
 cd s3cmd
@@ -89,6 +90,7 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 httpdEOF
 
 mv /etc/cron.daily/logrotate /etc/cron.hourly/.
+# Added for Splunk functionality end
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
