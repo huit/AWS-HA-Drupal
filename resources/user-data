@@ -36,9 +36,61 @@ function error_exit
 
 RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
 RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
-RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap"
+RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git python-dateutil"
 
 yum -y install $RPMS
+
+# Install s3cmd
+# Added for Splunk functionality start
+cd /home/ec2-user
+git clone https://github.com/s3tools/s3cmd.git
+cd s3cmd
+python setup.py install
+
+# Enable system logging to s3
+cat <<\syslogEOF > /etc/logrotate.d/syslog
+/var/log/cron
+/var/log/maillog
+/var/log/messages
+/var/log/secure
+/var/log/spooler
+{
+  missingok
+  sharedscripts
+  dateext
+  dateformat -%Y-%m-%d-%s
+  postrotate
+    /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+    BUCKET=boot_camp_logging_bucket
+    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
+    /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/maillog-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/secure-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    /usr/bin/s3cmd -m text/plain sync /var/log/spooler-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+  endscript
+}
+syslogEOF
+
+# Enable apache logging to s3
+cat <<\httpdEOF > /etc/logrotate.d/httpd
+/var/log/httpd/*log {
+  missingok
+  notifempty
+  sharedscripts
+  dateext
+  dateformat -%Y-%m-%d-%s
+  postrotate
+    BUCKET=boot_camp_logging_bucket
+    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
+    /usr/bin/s3cmd -m text/plain sync /var/log/httpd/*log s3://${BUCKET}/${INSTANCE_ID}/var/log/httpd/
+    /sbin/service httpd reload > /dev/null 2>/dev/null || true
+  endscript
+}
+httpdEOF
+
+mv /etc/cron.daily/logrotate /etc/cron.hourly/.
+# Added for Splunk functionality end
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
@@ -59,6 +111,9 @@ echo `hostname` >> /var/www/html/sites/default/files/hosts
 
 # Make changes to Apache Web Server configuration
 sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
+if [ -x /home/ec2-user/append_rewriterule.sh ]; then
+  /home/ec2-user/append_rewriterule.sh
+fi
 service httpd restart
 
 # Only execute the site install if we are the first host up - otherwise we'll end up losing all the data
@@ -70,7 +125,7 @@ then
 
   DB_URL=mysql://${DB_Username}:${DB_Password}@${DB_Hostname}:${DB_Port}/${DB_Name}
 
-  ~ec2-user/drush/drush site-install standard \ 
+  ~ec2-user/drush/drush site-install standard \
      --yes \
      --site-name="${APP_SiteName}" \
      --site-mail="${APP_EMail}" \
@@ -87,6 +142,7 @@ fi
 # Copy settings.php file since everything else is configured
 cp /home/ec2-user/settings.php /var/www/html/sites/default
 rm /home/ec2-user/settings.php
+mysql -u ${DB_Username} -p${DB_Password} -h ${DB_Hostname} -D ${DB_Name} -e 'update drupal_block set status = 0 where delta = "login"'
 
 # Start services
 chkconfig httpd on    && service httpd restart 
