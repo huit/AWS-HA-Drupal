@@ -79,9 +79,7 @@ mv /etc/cron.daily/logrotate /etc/cron.hourly/.
 ```
 
 ### Manual Rotation of Server Logs:
-Description: Currently a manual rotation of the server logs needs to be done initially to instantiate the creation of the S3 Bucket.
-S3 Bucket Name: boot_camp_logging_bucket
-
+Description: In the event that you need to perform a manual rotation of the server logs needs, execute the following commands on your linux instances.
 ```
 $> sudo logrotate -v -f /etc/logrotate.conf
 ```
