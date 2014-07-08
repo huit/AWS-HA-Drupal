@@ -3,33 +3,28 @@
 
 Welcome to the HPAC Splunk Installation Guide.  This file contains all of the documentation for adding Splunk Logging capabilities to the production AWS HA Drupal instances using automated scripts and CloudFormation Stack Templates.
 
-## Preparing Your Environment
-<<<<<<< HEAD
-
-###Updating your git environment
-
-The git repository associated with the HPAC Production Drupal HA sites is called "AWS-HA-Drupal".  Please ensure that you are located in the proper directory and that your repository is up to date with the master.  Perform the following commands to ensure that you have the latest code from the "AWS-HA-Drupal" repository.
-
-```
-$> git pull
-
-```
-
-Before proceeding, make sure that no errors occurred during the ```git pull```.
-
 ###Service Description
+
 The following code needs to be added to your CloudFormation Template that will automate the creation and redirection of specific logs to an S3 bucket.
+
+### S3 Bucket Standard Creation Parameters
+```
+S3 Bucket Name: HPAC_Splunk_Logging_Bucket
+S3 Location (Region): US Standard
+S3 Lifecycle Rules In Place: Delete Entire Bucket every 45 Days
+```
 
 ### Splunk Script
 
 ```
-# Added for Splunk functionality start
+# Begin Splunk Installation
+# Installing s3 cmd tools in proper directory on the server and install it!
 cd /home/ec2-user
 git clone https://github.com/s3tools/s3cmd.git
 cd s3cmd
 python setup.py install
 
-# Enable system logging to s3
+# Enable system logging to s3 by configuring log rotate
 cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/cron
 /var/log/maillog
@@ -38,12 +33,13 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/spooler
 {
   missingok
+  size 1
   sharedscripts
   dateext
   dateformat -%Y-%m-%d-%s
   postrotate
     /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
-    BUCKET=boot_camp_logging_bucket
+    BUCKET=hpac_splunk_logging_bucket
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
     /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
     /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
@@ -54,10 +50,11 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
 }
 syslogEOF
 
-# Enable apache logging to s3
+# Enable system logging to s3 by configuring log rotate for httpd
 cat <<\httpdEOF > /etc/logrotate.d/httpd
 /var/log/httpd/*log {
   missingok
+  size 1
   notifempty
   sharedscripts
   dateext
@@ -71,8 +68,9 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 }
 httpdEOF
 
+# Setup up cron to run this hourly 
 mv /etc/cron.daily/logrotate /etc/cron.hourly/.
-# Added for Splunk functionality end
+# End Splunk Installation
 
 ```
 
@@ -82,6 +80,4 @@ S3 Bucket Name: boot_camp_logging_bucket
 
 ```
 $> sudo logrotate -v -f /etc/logrotate.conf
-
 ```
-
