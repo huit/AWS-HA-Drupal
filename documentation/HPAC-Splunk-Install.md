@@ -9,7 +9,7 @@ The following code needs to be added to your CloudFormation Template that will a
 
 ### S3 Bucket Standard Creation Parameters
 ```
-S3 Bucket Name: HPAC_Splunk_Logging_Bucket
+S3 Bucket Name: hpac_splunk_logging_bucket
 S3 Location (Region): US Standard
 S3 Lifecycle Rules In Place: Delete Entire Bucket every 45 Days
 ```
@@ -33,6 +33,8 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/spooler
 {
   missingok
+# Set the initial size of the log to 1 that will force the creation of the INSTANCE_ID directories being created
+# during the hourly log rotate operation
   size 1
   sharedscripts
   dateext
@@ -54,6 +56,8 @@ syslogEOF
 cat <<\httpdEOF > /etc/logrotate.d/httpd
 /var/log/httpd/*log {
   missingok
+# Set the initial size of the log to 1 that will force the creation of the INSTANCE_ID directories being created
+# during the hourly log rotate operation
   size 1
   notifempty
   sharedscripts
