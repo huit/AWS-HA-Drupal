@@ -42,31 +42,37 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/messages
 /var/log/secure
 /var/log/spooler
+/var/log/cloud-init
+/var/log/cfn-init
 {
   missingok
   sharedscripts
   dateext
   dateformat -%Y-%m-%d-%s
   postrotate
-    /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
     source /etc/cloud-env.sh
+    /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
     SYNC="aws s3 sync"
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/""
-    ${SYNC} /var/log/messages-* ${LOG_URL}/
-    ${SYNC} /var/log/cron-*     ${LOG_URL}/
-    ${SYNC} /var/log/maillog-*  ${LOG_URL}/
-    ${SYNC} /var/log/secure-*   ${LOG_URL}/
-    ${SYNC} /var/log/spooler-*  ${LOG_URL}/
-    ${SYNC} /var/log/cloud-init*  ${LOG_URL}/
-    ${SYNC} /var/log/cfn-init*  ${LOG_URL}/
+    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log"
+    TMPDIR=$( mktemp -d )
+    cp /var/log/messages-* \
+       /var/log/cron-* \
+       /var/log/maillog-*  \
+       /var/log/secure-* \
+       /var/log/spooler-* \
+       /var/log/cloud-init* \
+       /var/log/cfn-init* ${TMPDIR}/
+    ${SYNC} ${TMPDIR} ${LOG_URL}
+    rm -rf ${TMPDIR}
   endscript
 }
 syslogEOF
 
 # Enable apache logging to s3
 cat <<\httpdEOF > /etc/logrotate.d/httpd
-/var/log/httpd/*log {
+/var/log/httpd/*log 
+{
   missingok
   notifempty
   sharedscripts
@@ -75,10 +81,12 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
   postrotate
     source /etc/cloud-env.sh
     SYNC="aws s3 sync"
-    BUCKET=boot_camp_logging_bucket
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/""
-    ${SYNC} /var/log/httpd/*log  ${LOG_URL}/httpd/
+    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/httpd"
+    TMPDIR=$( mktemp -d )
+    cp /var/log/httpd/*_log-* ${TMPDIR}/
+    ${SYNC} ${TMPDIR} ${LOG_URL}
+    rm -rf ${TMPDIR}
     /sbin/service httpd reload > /dev/null 2>/dev/null || true
   endscript
 }
