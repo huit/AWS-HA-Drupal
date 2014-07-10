@@ -44,8 +44,10 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/spooler
 /var/log/cloud-init
 /var/log/cfn-init
+/var/log/yum
 {
   missingok
+  notifempty
   sharedscripts
   dateext
   dateformat -%Y-%m-%d-%s
@@ -61,6 +63,7 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
        /var/log/maillog-*  \
        /var/log/secure-* \
        /var/log/spooler-* \
+       /var/log/yum-* \
        /var/log/cloud-init* \
        /var/log/cfn-init* ${TMPDIR}/
     ${SYNC} ${TMPDIR} ${LOG_URL}
@@ -92,7 +95,7 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 }
 httpdEOF
 
-mv /etc/cron.daily/logrotate /etc/cron.hourly/.
+echo "* * * * * root /usr/sbin/logrotate -f /etc/logrotate.conf >/dev/null 2>&1" > /etc/cron.d/logrotate
 
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
