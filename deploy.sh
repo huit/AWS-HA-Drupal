@@ -7,6 +7,7 @@ TEMPLATE_IN_FILE=resources/cf.json
 USERDATE_IN_FILE=resources/user-data
 TEMPLATE_OUT_FILE=template.json 
 
+AWS_CMD_PROFILE=" --profile nephoeng "
 #
 # AWS stack create command line and options
 #
@@ -48,7 +49,7 @@ if [ -z "${CloudCommand}" ]; then
 	#   perform operations on.
 	#
 
-	CMD="aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE"
+	CMD="aws ${AWS_CMD_PROFILE} cloudformation list-stacks --stack-status-filter CREATE_COMPLETE"
 
     echo ""
     echo "Listing of current CloudFormation Stacks that completed successfully"
@@ -118,7 +119,7 @@ fi
 if [ "${CloudCommand}" == 'create-stack' ]; then
 
 	ROLLBACK_ARG=" --disable-rollback "
-	CMD="aws cloudformation ${CloudCommand} \
+	CMD="aws ${AWS_CMD_PROFILE}  cloudformation ${CloudCommand} \
 		--capabilities CAPABILITY_IAM \
 		--stack-name ${Label} \
 		${ROLLBACK_ARG} \
@@ -137,7 +138,7 @@ fi
 #
 if [ "${CloudCommand}" == 'update-stack' ]; then
 
-	CMD="aws cloudformation ${CloudCommand} \
+	CMD="aws ${AWS_CMD_PROFILE} cloudformation ${CloudCommand} \
         --capabilities CAPABILITY_IAM \
         --stack-name ${Label} \
         --template-body file://${TEMPLATE_OUT_FILE}"
@@ -155,7 +156,7 @@ fi
 #
 if [ "${CloudCommand}" == 'delete-stack' ]; then
 	
-	CMD="aws cloudformation ${CloudCommand} \
+	CMD="aws ${AWS_CMD_PROFILE} cloudformation ${CloudCommand} \
         --stack-name ${Label}"
 	echo "Performing an delete-stack in AWS of the Cloudstack named ${Label}!"
 
