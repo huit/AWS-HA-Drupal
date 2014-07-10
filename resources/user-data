@@ -1,11 +1,6 @@
 #!/bin/bash -v
 
-
-
-
-
-
-yum update -y aws-cfn-bootstrap
+yum update -y aws-cfn-bootstrap 
 
 # Helper function
 function error_exit
@@ -40,12 +35,6 @@ RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git python-dateuti
 
 yum -y install $RPMS
 
-# Install s3cmd
-cd /home/ec2-user
-git clone https://github.com/s3tools/s3cmd.git
-cd s3cmd
-python setup.py install
-
 # Enable system logging to s3
 cat <<\syslogEOF > /etc/logrotate.d/syslog
 /var/log/cron
@@ -60,13 +49,15 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
   dateformat -%Y-%m-%d-%s
   postrotate
     /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
-    BUCKET=boot_camp_logging_bucket
+    source /etc/cloud-env.sh
+    SYNC="aws s3 sync"
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    /usr/bin/s3cmd -m text/plain sync /var/log/messages-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/cron-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/maillog-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/secure-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
-    /usr/bin/s3cmd -m text/plain sync /var/log/spooler-* s3://${BUCKET}/${INSTANCE_ID}/var/log/
+    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/""
+    ${SYNC} /var/log/messages-* ${LOG_URL}/
+    ${SYNC} /var/log/cron-*     ${LOG_URL}/
+    ${SYNC} /var/log/maillog-*  ${LOG_URL}/
+    ${SYNC} /var/log/secure-*   ${LOG_URL}/
+    ${SYNC} /var/log/spooler-*  ${LOG_URL}/
   endscript
 }
 syslogEOF
@@ -80,9 +71,12 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
   dateext
   dateformat -%Y-%m-%d-%s
   postrotate
+    source /etc/cloud-env.sh
+    SYNC="aws s3 sync"
     BUCKET=boot_camp_logging_bucket
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
-    /usr/bin/s3cmd -m text/plain sync /var/log/httpd/*log s3://${BUCKET}/${INSTANCE_ID}/var/log/httpd/
+    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/""
+    ${SYNC} /var/log/httpd/*log  ${LOG_URL}/httpd/
     /sbin/service httpd reload > /dev/null 2>/dev/null || true
   endscript
 }
