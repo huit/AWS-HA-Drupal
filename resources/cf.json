@@ -556,18 +556,6 @@
       "DeletionPolicy" : "Snapshot"
     },
 
-    "ReplicaDB" : {
-      "Type" : "AWS::RDS::DBInstance",
-      "Properties" : {
-        "DBInstanceIdentifier" : { "Fn::Join" : ["", [{"Ref" : "Label"} ,"ReadReplicaDatabase"]]},
-        "SourceDBInstanceIdentifier" : { "Ref" : "MasterDB" },
-        "DBInstanceClass" : { "Ref" : "DBClass" },
-        "Tags" : [
-          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Read Replica Database"]]}}
-        ]
-      }
-    },
-
     "DBSecurityGroup": {
       "Type": "AWS::RDS::DBSecurityGroup",
       "Properties": {
@@ -604,21 +592,13 @@
                                       "/",
                                       { "Ref": "DBName" }]]}
     },
-    "ReplicaJDBCConnectionString": {
-      "Description" : "JDBC connection string for the replica database",
-      "Value" : { "Fn::Join": [ "", [ "jdbc:mysql://",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
-                                      ":",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },
-                                      "/",
-                                      { "Ref": "DBName" }]]}
-    },
+
     "MySQLConnectionString": {
       "Description" : "Connection string for the MySQL database",
         "Value" : { "Fn::Join": [ "", [ "mysql://",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
+                                      { "Fn::GetAtt": [ "MasterDB", "Endpoint.Address" ] },
                                       ":",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },
+                                      { "Fn::GetAtt": [ "MasterDB", "Endpoint.Port" ] },
                                       "/",
                                       { "Ref": "DBName" }]]}
     },
