@@ -174,7 +174,9 @@
     },
 
     "AWSRegionArch2AMI" : {
-      "us-east-1" : { "32" : "ami-178e927e", "64" : "ami-fb8e9292", "64HVM" : "ami-978d91fe" }
+      "us-east-1" : { "32" : "ami-178e927e", "64" : "ami-fb8e9292", "64HVM" : "ami-978d91fe" },
+      "us-west-2" : { "32" : "ami-1e3a502e", "64" : "ami-043a5034", "64HVM" : "ami-383a5008" },
+      "us-west-1" : { "32" : "ami-78ba833d", "64" : "ami-7aba833f", "64HVM" : "ami-5aba831f" }
     }
   },
 
