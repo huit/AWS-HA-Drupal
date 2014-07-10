@@ -58,6 +58,8 @@ cat <<\syslogEOF > /etc/logrotate.d/syslog
     ${SYNC} /var/log/maillog-*  ${LOG_URL}/
     ${SYNC} /var/log/secure-*   ${LOG_URL}/
     ${SYNC} /var/log/spooler-*  ${LOG_URL}/
+    ${SYNC} /var/log/cloud-init*  ${LOG_URL}/
+    ${SYNC} /var/log/cfn-init*  ${LOG_URL}/
   endscript
 }
 syslogEOF
