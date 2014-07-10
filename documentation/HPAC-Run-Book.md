@@ -18,7 +18,7 @@ Before proceeding, make sure that no errors occurred during the ```git pull```.
 
 ## Cloudformation Template Location
 
-The cloudformation template located here ```your_git_user_name/AWS-HA-Drupal```
+The cloudformation template located here `your_git_user_name/AWS-HA-Drupal`
 
 ## Creating the HPAC Drupal HA Instances using CloudFormation and the aws create-stack command
 
@@ -26,7 +26,6 @@ The cloudformation template located here ```your_git_user_name/AWS-HA-Drupal```
 
 ```
 $> export Label=HPAC-Drupal-Instance
-$> export CloudCommand=create-stack
 $> export DBPassword=hpacdbpassword
 $> export SitePassword=hpacsitepassword
 $> export KeyName=HPACDrupalKeyPair
@@ -36,7 +35,7 @@ $> export KeyName=HPACDrupalKeyPair
 ###Executing the script:
 
 ```
-$> ./deploy.sh
+$> ./deploy.sh create-stack
 
 ```
 
@@ -46,9 +45,15 @@ $> ./deploy.sh
 $> Performing an create-stack in AWS of the Cloudstack named HPAC-Drupal-Instance!
 $> Command to execute:
 $> -----------------------
-$> aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name HPAC-Drupal-Instance --disable-rollback --template-body file://template.json --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
+$> aws cloudformation create-stack 
+          --capabilities CAPABILITY_IAM 
+          --stack-name HPAC-Drupal-Instance 
+          --disable-rollback 
+          --template-body file://template.json 
+          --parameters ParameterKey=SitePassword,ParameterValue=hpacsitepassword 
+          ParameterKey=DBPassword,ParameterValue=hpacdbpassword ParameterKey=Label,ParameterValue=HPAC-Drupal-Instance ParameterKey=KeyName,ParameterValue=HPACDrupalKeyPair
 $> {
-$> "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/e317ad30-fd44-11e3-a961-500162a66cb4"
+     "StackId": "arn:aws:cloudformation:us-east-1:219880708180:stack/HPAC-Drupal-Instance/e317ad30-fd44-11e3-a961-500162a66cb4"
 $> }
 
 ```
@@ -69,7 +74,6 @@ Use:  The update-stack command can be used to recreate HPAC instances that have 
 
 ```
 $> export Label=HPAC-Drupal-Instance
-$> export CloudCommand=update-stack
 $> export DBPassword=hpacdbpassword
 $> export SitePassword=hpacsitepassword
 $> export KeyName=HPACDrupalKeyPair
@@ -79,7 +83,7 @@ $> export KeyName=HPACDrupalKeyPair
 ###Executing the script:
 
 ```
-$> ./deploy.sh
+$> ./deploy.sh update-stack
 
 ```
 
@@ -113,15 +117,12 @@ Use:  The delete-stack command can be used to "terminate" ALL HPAC instances. CA
 
 ```
 $> export Label=HPAC-Drupal-Instance
-$> export CloudCommand=delete-stack
-
 ```
 
 ###Executing the script:
 
 ```
-$> ./deploy.sh
-
+$> ./deploy.sh delete-stack
 ```
 
 ###Output of the script:

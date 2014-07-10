@@ -5,6 +5,13 @@
 
   "Parameters" : {
 
+    "S3LoggingRole" : {
+      "Description" : "Role that allow S3 Logging",
+      "Type" : "String",
+      "Default" : "S3LoggingAccess",
+      "ConstraintDescription" : "Must be a valid IAM Role"
+    },
+
     "KeyName": {
       "Description" : "HPAC EC2 KeyPair to enable SSH access to the instances",
       "Type": "String",
@@ -178,6 +185,14 @@
 
   "Resources" : {
 
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [{"Ref" : "S3LoggingRole"}]
+      }
+    },
+
     "S3Bucket" : {
       "Type" : "AWS::S3::Bucket",
       "DeletionPolicy" : "Retain"
@@ -261,7 +276,7 @@
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ],
         "Tags" : [
           { "Key"  : "Label", "Value" : {"Ref" : "Label"}, "PropagateAtLaunch" : "true" },
-          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Instance"]]}, "PropagateAtLaunch" : "true"}
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Web Instance"]]}, "PropagateAtLaunch" : "true"}
         ]
       }
     },
@@ -293,7 +308,7 @@
                     "export CFN_Region='",     { "Ref" : "AWS::Region" },  "'\n",
                     "export CFN_S3Bucket='",   { "Ref" : "S3Bucket" }, "'\n",
                     "export APP_SiteName='",   { "Ref" : "SiteName" }, "'\n",
-                    "export APP_SiteName='",   { "Ref" : "SiteName" }, "'\n",
+                    "export APP_SiteAdmin='",   { "Ref" : "SiteAdmin" }, "'\n",
                     "export APP_SiteEmail='",  { "Ref" : "SiteEMail" }, "'\n",
                     "export APP_SitePassword='",  { "Ref" : "SitePassword" }, "'\n",
                     "export DB_Username='",    { "Ref" : "DBUsername" }, "'\n",
@@ -303,6 +318,16 @@
                     "export DB_Port='",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "'\n"
                   ]]},
                 "mode" : "000400",
+                "owner" : "root",
+                "group" : "root"
+              },
+
+              "/home/ec2-user/append_rewriterule.sh" : {
+                "content" : { "Fn::Join" : ["", [ 
+                    "#!/bin/bash\n",
+                    "sed -i '/RewriteEngine on/a RewriteRule ^(scripts|profile|includes|cron\\.php|install\\.php|update\\.php|xmlrpc\\.php|filter($|/)|user($|/)|admin($|/)) - [F,L]' /var/www/html/.htaccess\n"
+                  ]]},
+                "mode" : "000544",
                 "owner" : "root",
                 "group" : "root"
               },
@@ -346,6 +371,7 @@
       },
 
       "Properties": {
+        "IamInstanceProfile" : {"Ref" : "InstanceProfile"},
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType" : { "Ref" : "InstanceType" },
@@ -372,7 +398,7 @@
         "Tags" : [ 
           { 
             "Key"  : "Name", 
-            "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", " Admin Instance"]]},
+            "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Admin Instance"]]},
             "PropagateAtLaunch" : "true"
           }
         ]
@@ -399,7 +425,7 @@
                     "export CFN_Region=",     { "Ref" : "AWS::Region" },  "\n",
                     "export CFN_S3Bucket=",   { "Ref" : "S3Bucket" }, "\n",
                     "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
-                    "export APP_SiteName=",   { "Ref" : "SiteName" }, "\n",
+                    "export APP_SiteAdmin='",   { "Ref" : "SiteAdmin" }, "'\n",
                     "export APP_SiteEmail=",  { "Ref" : "SiteEMail" }, "\n",
                     "export APP_SitePassword=",  { "Ref" : "SitePassword" }, "\n",
                     "export DB_Username=",    { "Ref" : "DBUsername" }, "\n",
@@ -458,6 +484,7 @@
         }
       },
       "Properties": {
+        "IamInstanceProfile" : {"Ref" : "InstanceProfile"},
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType" : { "Ref" : "InstanceType" },
@@ -507,18 +534,6 @@
       "DeletionPolicy" : "Snapshot"
     },
 
-    "ReplicaDB" : {
-      "Type" : "AWS::RDS::DBInstance",
-      "Properties" : {
-        "DBInstanceIdentifier" : { "Fn::Join" : ["", [{"Ref" : "Label"} ,"ReadReplicaDatabase"]]},
-        "SourceDBInstanceIdentifier" : { "Ref" : "MasterDB" },
-        "DBInstanceClass" : { "Ref" : "DBClass" },
-        "Tags" : [
-          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "Read Replica Database"]]}}
-        ]
-      }
-    },
-
     "DBSecurityGroup": {
       "Type": "AWS::RDS::DBSecurityGroup",
       "Properties": {
@@ -555,21 +570,13 @@
                                       "/",
                                       { "Ref": "DBName" }]]}
     },
-    "ReplicaJDBCConnectionString": {
-      "Description" : "JDBC connection string for the replica database",
-      "Value" : { "Fn::Join": [ "", [ "jdbc:mysql://",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
-                                      ":",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },
-                                      "/",
-                                      { "Ref": "DBName" }]]}
-    },
+
     "MySQLConnectionString": {
       "Description" : "Connection string for the MySQL database",
         "Value" : { "Fn::Join": [ "", [ "mysql://",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Address" ] },
+                                      { "Fn::GetAtt": [ "MasterDB", "Endpoint.Address" ] },
                                       ":",
-                                      { "Fn::GetAtt": [ "ReplicaDB", "Endpoint.Port" ] },
+                                      { "Fn::GetAtt": [ "MasterDB", "Endpoint.Port" ] },
                                       "/",
                                       { "Ref": "DBName" }]]}
     }
