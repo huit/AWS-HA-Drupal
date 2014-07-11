@@ -651,6 +651,64 @@
       }
     },
 
+    "ELBLatencyAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert id ELB Latency over 1 sec on average for 5 minutes",
+        "Namespace": "AWS/ELB",
+        "MetricName": "Latency",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": "1",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },
+
+    "ELB5XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert on 5XX errors over 1 min",
+        "Namespace": "AWS/ELB",
+        "MetricName": "HTTPCode_ELB_5XX",
+        "Statistic": "Sum",
+        "Period": "60",
+        "Threshold": "10",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "1",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },
+
+    "ELB4XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert on 4XX errors over 1 min",
+        "Namespace": "AWS/ELB",
+        "MetricName": "HTTPCode_ELB_4XX",
+        "Statistic": "Sum",
+        "Period": "60",
+        "Threshold": "10",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "1",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },    
+
+
     "DBCPUHighAlarm": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
