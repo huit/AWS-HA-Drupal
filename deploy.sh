@@ -7,7 +7,7 @@ TEMPLATE_IN_FILE=resources/cf.json
 USERDATE_IN_FILE=resources/user-data
 TEMPLATE_OUT_FILE=template.json 
 
-AWS_CMD_PROFILE=" --profile nephoeng "
+#AWS_CMD_PROFILE=" --profile nephoeng "
 #
 # AWS stack create command line and options
 #
