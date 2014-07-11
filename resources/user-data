@@ -95,6 +95,33 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 }
 httpdEOF
 
+if [-x /home/ec2-user/get_rds_logs.sh]; then
+
+  echo "* * * * * root /home/ec2-user/get_rds_logs.sh > /var/log/rds.log 2>&1" > /etc/cron.d/rds
+
+# Enable apache logging to s3
+cat <<\rdsEOF > /etc/logrotate.d/rds
+/var/log/rds.log
+{
+  missingok
+  notifempty
+  sharedscripts
+  dateext
+  dateformat -%Y-%m-%d-%s
+  postrotate
+    source /etc/cloud-env.sh
+    SYNC="aws s3 sync"
+    INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
+    LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/rds"
+    TMPDIR=$( mktemp -d )
+    cp /var/log/rds.log ${TMPDIR}/
+    ${SYNC} ${TMPDIR} ${LOG_URL}
+    rm -rf ${TMPDIR}
+  endscript
+}
+rdsEOF
+fi
+
 echo "* * * * * root /usr/sbin/logrotate -f /etc/logrotate.conf >/dev/null 2>&1" > /etc/cron.d/logrotate
 
 # Install s3fs

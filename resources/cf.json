@@ -586,6 +586,23 @@
       }
     },
 
+   "MySQLDBParameterGroup" : {
+       "Type": "AWS::RDS::DBParameterGroup",
+       "Properties" : {
+          "Description" : "MySQL DB Parameter Group",
+          "Family" : "mysql5.6",
+          "Parameters" : {
+             "table_open_cache" : "64",
+             "slow_query_log" : "1",
+             "general_log" : "1",
+             "log_output" : "FILE"
+          },
+          "Tags" : [
+          { "Key"  : "Name", "Value" : { "Fn::Join" : ["", [{"Ref" : "Label"} , " - ", "MySQL DB Parameter Group"]]}}
+          ]
+       }
+    },
+
     "MasterDB" : {
       "Type" : "AWS::RDS::DBInstance",
       "Properties" : {
@@ -595,7 +612,8 @@
         "Engine" : "MySQL",
         "EngineVersion" : "5.6",
         "DBInstanceIdentifier" : { "Fn::Join" : ["", [{"Ref" : "Label"} ,"MasterDatabase"]]},
-        "DBSecurityGroups": [ { "Ref": "DBSecurityGroup" } ],
+        "DBParameterGroupName" : { "Ref": "MySQLDBParameterGroup" },
+        "DBSecurityGroups": [ { "Ref": "DBSecurityGroup" }, { "Ref": "DBSecurityByCIDRIPGroup" } ],
         "MasterUsername" : { "Ref" : "DBUsername" },
         "MasterUserPassword" : { "Ref" : "DBPassword" },
         "MultiAZ" : { "Ref" : "MultiAZDatabase" },
@@ -612,6 +630,14 @@
         "DBSecurityGroupIngress": { "EC2SecurityGroupName": { "Ref": "WebServerSecurityGroup"} },
         "GroupDescription" : "Frontend Access"
       }
+    },
+
+    "DBSecurityByCIDRIPGroup" : {
+      "Type" : "AWS::RDS::DBSecurityGroup",
+       "Properties" : {
+         "GroupDescription" : "Ingress for CIDRIP",
+         "DBSecurityGroupIngress" : { "CIDRIP" : "128.103.150.0/24" }
+       }
     },
 
     "WebServerSecurityGroup" : {
