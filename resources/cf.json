@@ -505,9 +505,9 @@
               "/home/ec2-user/get_rds_logs.sh" : {
                 "content" : { "Fn::Join" : ["", [
                   "#!/bin/bash\n",
-                  "for i in $(aws rds describe-db-log-files  --db-instance-identifier ", { "Ref" : "MasterDB" },
+                  "for i in $(aws rds describe-db-log-files  --db-instance-identifier ", { "Fn::Join" : ["", [{"Ref" : "Label"} ,"MasterDatabase"]]},
                   " --region ", { "Ref" : "AWS::Region" },
-                  " --output text | awk '{print $3}') ; do aws rds download-db-log-file-portion --output text --db-instance-identifier ", { "Ref" : "MasterDB" },
+                  " --output text | awk '{print $3}') ; do aws rds download-db-log-file-portion --output text --db-instance-identifier ", { "Fn::Join" : ["", [{"Ref" : "Label"} ,"MasterDatabase"]]},
                   " --region ", { "Ref" : "AWS::Region" },
                   " --log-file-name $i ; done | grep -v ^None > /var/log/rds.log\n"
                 ]]},
