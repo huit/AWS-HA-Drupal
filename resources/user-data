@@ -147,7 +147,7 @@ fi
 # Copy settings.php file since everything else is configured
 cp /home/ec2-user/settings.php /var/www/html/sites/default
 rm /home/ec2-user/settings.php
-mysql -u ${DB_Username} -p${DB_Password} -h ${DB_Hostname} -D ${DB_Name} -e 'update drupal_block set status = 0 where delta = "login"'
+#mysql -u ${DB_Username} -p${DB_Password} -h ${DB_Hostname} -D ${DB_Name} -e 'update drupal_block set status = 0 where delta = "login"'
 
 # Start services
 chkconfig httpd on    && service httpd restart 
