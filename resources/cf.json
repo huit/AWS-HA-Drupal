@@ -511,7 +511,7 @@
                   " --region ", { "Ref" : "AWS::Region" },
                   " --log-file-name $i ; done | grep -v ^None > /var/log/rds.log\n"
                 ]]},
-                "mode" : "000400",
+                "mode" : "000544",
                 "owner" : "root",
                 "group" : "root"
               }
