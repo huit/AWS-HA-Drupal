@@ -32,8 +32,13 @@ function error_exit
 RPMS="httpd php php-mysql php-gd php-xml php-mbstring mysql gcc"
 RPMS="$RPMS make libstdc++-devel gcc-c++ fuse fuse-devel"
 RPMS="$RPMS libcurl-devel libxml2-devel openssl-devel mailcap git python-dateutil"
-
 yum -y install $RPMS
+
+#==================================================
+#
+# Logging to S3
+#
+#==================================================
 
 # Enable system logging to s3
 cat <<\syslogEOF > /etc/logrotate.d/syslog
@@ -93,7 +98,7 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 }
 httpdEOF
 
-if [-x /home/ec2-user/get_rds_logs.sh]; then
+if [ -x /home/ec2-user/get_rds_logs.sh ]; then
 
   echo "* * * * * root /home/ec2-user/get_rds_logs.sh > /var/log/rds.log 2>&1" > /etc/cron.d/rds
 
@@ -121,7 +126,11 @@ fi
 
 echo "* * * * * root /usr/sbin/logrotate -f /etc/logrotate.conf >/dev/null 2>&1" > /etc/cron.d/logrotate
 
-# Setup CloudWatch logs 
+#==================================================
+#
+# Setup CloudWatch logging
+#
+#==================================================
 
 cat <<awslogsEOF > /etc/awslogs.conf
 [general]
@@ -166,6 +175,12 @@ python awslogs-agent-setup-v1.0.py -n \
   -r ${CFN_Region} \
   -c /etc/awslogs.conf || error_exit 'Failed to run CloudWatch Logs agent setup'
 
+#==================================================
+#
+# Setup s3fs and use for default/files dir
+#
+#==================================================
+
 # Install s3fs
 cd /home/ec2-user/s3fs/s3fs-1.61
 ./configure --prefix=/usr
@@ -181,7 +196,12 @@ rm -Rf /var/www/html/drupal-7.8
 mv /var/www/html/sites/default/files /var/www/html/sites/default/files_original
 mkdir -p /var/www/html/sites/default/files
 s3fs -o allow_other -o use_cache=/tmp ${CFN_S3Bucket} /var/www/html/sites/default/files || error_exit 'Failed to mount the S3 bucket'
-echo `hostname` >> /var/www/html/sites/default/files/hosts
+
+#==================================================
+#
+# Setup apache
+#
+#==================================================
 
 # Make changes to Apache Web Server configuration
 sed -i 's/AllowOverride None/AllowOverride All/g' /etc/httpd/conf/httpd.conf
@@ -190,7 +210,14 @@ if [ -x /home/ec2-user/append_rewriterule.sh ]; then
 fi
 service httpd restart
 
+#==================================================
+#
+# Setup Drupal
+#
+#==================================================
+
 # Only execute the site install if we are the first host up - otherwise we'll end up losing all the data
+echo `hostname` >> /var/www/html/sites/default/files/hosts
 read first < /var/www/html/sites/default/files/hosts
 if [ `hostname` = $first ]
 then
@@ -222,5 +249,10 @@ mysql -u ${DB_Username} -p${DB_Password} -h ${DB_Hostname} -D ${DB_Name} -e 'upd
 chkconfig httpd on    && service httpd restart 
 chkconfig sendmail on && service sendmail restart 
 
-# All is well so signal success
+#==================================================
+#
+# All is well so signal SUCCESS
+#
+#==================================================
+
 /opt/aws/bin/cfn-signal -e 0 -r "Drupal setup complete" ${CFN_WaitHandle}
