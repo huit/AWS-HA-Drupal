@@ -95,7 +95,7 @@ cat <<\httpdEOF > /etc/logrotate.d/httpd
 }
 httpdEOF
 
-if [-x /home/ec2-user/get_rds_logs.sh]; then
+if [ -x /home/ec2-user/get_rds_logs.sh ]; then
 
   echo "* * * * * root /home/ec2-user/get_rds_logs.sh > /var/log/rds.log 2>&1" > /etc/cron.d/rds
 
