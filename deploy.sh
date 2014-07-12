@@ -4,7 +4,7 @@
 # File locations
 #
 TEMPLATE_IN_FILE=resources/cf.json
-USERDATE_IN_FILE=resources/user-data
+USERDATA_IN_FILE=resources/user-data
 TEMPLATE_OUT_FILE=template.json 
 
 AWS_CMD_PROFILE=" --profile nephoeng "
@@ -78,15 +78,16 @@ if [ "${CloudCommand}" != 'delete-stack' ]; then
 	#
 	# Generate CF JSON (this is ugly! REP)
 	#
-	USERDATA1=resources/user-data
+	USERDATA1=$(mktemp -t user-data.XXXXXXXXXX)
+	grep -v "^\W*#" ${USERDATA_IN_FILE} | grep -v "^$" > ${USERDATA1}
 	USERDATA2=$(mktemp -t user-data.XXXXXXXXXX)
-	cat resources/user-data | sed 's/LaunchConfig1/AdminLaunchConfig/g' > ${USERDATA2}
+	cat ${USERDATA1} | sed 's/LaunchConfig1/AdminLaunchConfig/g' > ${USERDATA2}
 
 	TMPFILE=$(mktemp -t cf.XXXXXXXXXX)
-	./bin/gen_cf_json "${TEMPLATE_IN_FILE}" "${USERDATE_IN_FILE}" LaunchConfig1 > ${TMPFILE}
-	./bin/gen_cf_json "${TMPFILE}"          "${USERDATA2}"        AdminLaunchConfig > ${TEMPLATE_OUT_FILE}
+	./bin/gen_cf_json "${TEMPLATE_IN_FILE}" "${USERDATA1}" LaunchConfig1 > ${TMPFILE}
+	./bin/gen_cf_json "${TMPFILE}"          "${USERDATA2}" AdminLaunchConfig > ${TEMPLATE_OUT_FILE}
 
-	rm -f ${USERDATA2} ${TMPFILE}
+	rm -f ${USERDATA1} ${USERDATA2} ${TMPFILE}
 
 	#
 	# Load parameters from environment and build params argument line for
