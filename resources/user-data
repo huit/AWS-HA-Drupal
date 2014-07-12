@@ -97,7 +97,7 @@ httpdEOF
 
 if [ -x /home/ec2-user/get_rds_logs.sh ]; then
 
-  echo "* * * * * root /home/ec2-user/get_rds_logs.sh > /var/log/rds.log 2>&1" > /etc/cron.d/rds
+  echo "*/2 * * * * root /home/ec2-user/get_rds_logs.sh > /var/log/rds.log 2>&1" > /etc/cron.d/rds
 
 # Enable apache logging to s3
 cat <<\rdsEOF > /etc/logrotate.d/rds
@@ -114,7 +114,7 @@ cat <<\rdsEOF > /etc/logrotate.d/rds
     INSTANCE_ID=`curl --silent http://169.254.169.254/latest/meta-data/instance-id | sed -e "s/i-//"`
     LOG_URL="s3://${CFN_LogBucket}/${INSTANCE_ID}/var/log/rds"
     TMPDIR=$( mktemp -d )
-    cp /var/log/rds.log ${TMPDIR}/
+    cp /var/log/rds.log* ${TMPDIR}/
     ${SYNC} ${TMPDIR} ${LOG_URL}
     rm -rf ${TMPDIR}
   endscript
