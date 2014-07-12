@@ -182,11 +182,43 @@
 
   "Resources" : {
 
+    "LogRole": {
+      "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [ 
+              {
+                "Effect": "Allow",
+                "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                "Action": [ "sts:AssumeRole" ]
+              }
+            ]
+          },
+          "Path": "/",
+          "Policies": [
+            {
+              "PolicyName": "LogRolePolicy",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [ "logs:*", "s3:GetObject" ],
+                    "Resource": [ "arn:aws:logs:*:*:*", "arn:aws:s3:::*" ]
+                  } 
+                ]
+              }
+            }
+          ]
+        }
+      },
+
     "InstanceProfile" : {
       "Type" : "AWS::IAM::InstanceProfile",
       "Properties" : {
         "Path" : "/",
-        "Roles" : [{"Ref" : "S3LoggingRole"}]
+        "Roles" : [{"Ref" : "S3LoggingRole"}, {"Ref": "LogRole"} ]
       }
     },
 
@@ -328,6 +360,7 @@
                     "export CFN_Region='",     { "Ref" : "AWS::Region" },  "'\n",
                     "export CFN_S3Bucket='",   { "Ref" : "S3Bucket" }, "'\n",
                     "export CFN_LogBucket='",  { "Ref" : "S3LogBucket" }, "'\n",
+                    "export CW_LogGroup='",   { "Ref": "WebServerLogGroup"}, "'\n",
                     "export APP_SiteName='",   { "Ref" : "SiteName" }, "'\n",
                     "export APP_SiteAdmin='",  { "Ref" : "SiteAdmin" }, "'\n",
                     "export APP_SiteEmail='",  { "Ref" : "SiteEMail" }, "'\n",
@@ -336,7 +369,8 @@
                     "export DB_Password='",    { "Ref" : "DBPassword" }, "'\n",
                     "export DB_Name='",        { "Ref" : "DBName" }, "'\n",
                     "export DB_Hostname='",    {"Fn::GetAtt" : ["MasterDB", "Endpoint.Address"]}, "'\n",
-                    "export DB_Port='",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "'\n"
+                    "export DB_Port='",        {"Fn::GetAtt" : ["MasterDB", "Endpoint.Port"]}, "'\n",
+                    "export INSTANCE_ID=$( /opt/aws/bin/ec2-metadata -i | cut -d ' ' -f 2 )\n"
                   ]]},
                 "mode" : "000400",
                 "owner" : "root",
@@ -536,6 +570,13 @@
       }
     },
 
+    "WebServerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 7
+      }
+    },
+
    "MySQLDBParameterGroup" : {
        "Type": "AWS::RDS::DBParameterGroup",
        "Properties" : {
@@ -632,6 +673,11 @@
     "LogBucket" : {
       "Value" : { "Ref" : "S3LogBucket" },
       "Description" : "Name of S3 bucket to hold website content"
+    },
+
+    "CloudWatchLogGroupName": {
+      "Description": "The name of the CloudWatch log group",
+      "Value": { "Ref": "WebServerLogGroup" }
     }
 
   }
