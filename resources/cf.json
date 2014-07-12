@@ -149,8 +149,12 @@
       "Type" : "String",
       "Default" : "S3LoggingAccess",
       "ConstraintDescription" : "Must be a valid IAM Role"
-    }
+    },
 
+    "AlarmTopic" : {
+      "Description" : "ARN of Topic to alarm to",
+      "Type" : "String"
+    }
 
   },
 
@@ -177,7 +181,53 @@
       "us-east-1" : { "32" : "ami-178e927e", "64" : "ami-fb8e9292", "64HVM" : "ami-978d91fe" },
       "us-west-2" : { "32" : "ami-1e3a502e", "64" : "ami-043a5034", "64HVM" : "ami-383a5008" },
       "us-west-1" : { "32" : "ami-78ba833d", "64" : "ami-7aba833f", "64HVM" : "ami-5aba831f" }
+    },
+
+    "InstanceTypeMap" : {
+      "db.m1.small" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadLatencyLimit" : "5", 
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.m1.large" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadLatencyLimit" : "5", 
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.m1.xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadLatencyLimit" : "5", 
+        "ReadIOPSLimit" : "100",
+        "WriteIOPSLimit" : "100"
+      },
+      "db.m2.xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "ReadLatencyLimit" : "5", 
+        "WriteIOPSLimit" : "100"
+      },
+      "db.m2.2xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "ReadLatencyLimit" : "5", 
+        "WriteIOPSLimit" : "100"
+      },
+      "db.m2.4xlarge" : {
+        "CPULimit" : "60",
+        "FreeStorageSpaceLimit" : "1024",
+        "ReadIOPSLimit" : "100",
+        "ReadLatencyLimit" : "5",        
+        "WriteIOPSLimit" : "100"
+      }
     }
+
   },
 
   "Resources" : {
@@ -599,7 +649,159 @@
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
         ]
       }
+    },
+
+    "ELBLatencyAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert id ELB Latency over 1 sec on average for 5 minutes",
+        "Namespace": "AWS/ELB",
+        "MetricName": "Latency",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": "1",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },
+
+    "ELB5XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert on 5XX errors over 1 min",
+        "Namespace": "AWS/ELB",
+        "MetricName": "HTTPCode_ELB_5XX",
+        "Statistic": "Sum",
+        "Period": "60",
+        "Threshold": "10",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "1",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },
+
+    "ELB4XXAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alert on 4XX errors over 1 min",
+        "Namespace": "AWS/ELB",
+        "MetricName": "HTTPCode_ELB_4XX",
+        "Statistic": "Sum",
+        "Period": "60",
+        "Threshold": "10",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "1",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "LoadBalancerName",
+            "Value": { "Ref": "ElasticLoadBalancer" }
+        }]
+      }
+    },    
+
+
+    "DBCPUHighAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBName" }, " CPU > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "CPULimit" ]}, "% for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUUtilization",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "CPULimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "MasterDB" }
+        }]
+      }
+    },
+    "DBFreeStorageSpaceAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBName" }, " storage space <= ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "FreeStorageSpaceLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "FreeStorageSpace",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "FreeStorageSpaceLimit" ]},
+        "ComparisonOperator": "LessThanOrEqualToThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "MasterDB" }
+        }]
+      }
+    },
+    "DBReadIOPSHighAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBName" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "ReadIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "ReadIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "ReadIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "MasterDB" }
+        }]
+      }
+    },
+    "DBReadLatencyHighAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBName" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "ReadIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "ReadLatency",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "ReadLatencyLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "MasterDB" }
+        }]
+      }
+    },
+
+    "WriteIOPSHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": { "Fn::Join" : [ "", ["Alarm if ", { "Ref" : "DBName" }, " WriteIOPs > ", { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "WriteIOPSLimit" ]}, " for 5 minutes" ]]},
+        "Namespace": "AWS/RDS",
+        "MetricName": "WriteIOPS",
+        "Statistic": "Average",
+        "Period": "60",
+        "Threshold": { "Fn::FindInMap" : [ "InstanceTypeMap", { "Ref" : "DBClass" }, "WriteIOPSLimit" ]},
+        "ComparisonOperator": "GreaterThanThreshold",
+        "EvaluationPeriods": "5",
+        "AlarmActions": [ { "Ref": "AlarmTopic" } ],
+        "Dimensions": [{
+            "Name": "DBInstanceIdentifier",
+            "Value": { "Ref": "MasterDB" }
+        }]
+      }
     }
+
+
   },
   
   "Outputs" : {
