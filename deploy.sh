@@ -75,7 +75,7 @@ fi
 if [ "${CloudCommand}" != 'delete-stack' ]; then
 
 	#
-	# Generate CF JSON (this is ugly! REP)
+	# Generate CloudFormation JSON (this is ugly! REP)
 	#
 	USERDATA1=resources/user-data
 	USERDATA2=$(mktemp -t user-data.XXXXXXXXXX)

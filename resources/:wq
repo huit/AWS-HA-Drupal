@@ -158,7 +158,7 @@ chkconfig sendmail on && service sendmail restart
 #======================================
         NewRelicLicenseKey="a07c47adbd81980f702b1a9b42b5638d6fd81334"
 	NR_REPO="http://yum.newrelic.com/pub/newrelic/el5/x86_64/newrelic-repo-5-3.noarch.rpm"
-	NPI_INSTALL_URL="https://download.newrelic.com/npi/release/install-npi-linux-redhat-x64.sh"
+	NPI_INSTALL_URL="https://download.newrelic.com/npi/release/install-npi-linux-redhat-x64.sh)"
 	export NR_INSTALL_SILENT=true
 	export NR_INSTALL_KEY=${NewRelicLicenseKey}
 	# environment variables for NPI -- New Relic Plugin Installer

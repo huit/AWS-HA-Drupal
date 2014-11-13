@@ -598,7 +598,7 @@
       "DependsOn" : "WebServerGroup1",
       "Properties" : {
         "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "3000"
+        "Timeout" : "43200"
       }
     },
 
